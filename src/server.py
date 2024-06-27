@@ -4,7 +4,8 @@ import time
 import os
 import cv2
 from utils.prompts import BASIC_PROMPT
-from utils.gpt4o_request import process_and_prompt
+from utils.request_utils import process_and_prompt
+import shutil
 
 def get_raspberry_pi_image(url, username, password):
     """
@@ -36,6 +37,7 @@ def stitch_images_to_video(image_folder, video_path, frame_rate):
     frame_rate (int): The frame rate of the output video.
     """
     images = [img for img in os.listdir(image_folder) if img.endswith(".jpg")]
+    print(len(images))
     images.sort()  # Sort images by name (which includes the timestamp)
 
     if not images:
@@ -48,6 +50,7 @@ def stitch_images_to_video(image_folder, video_path, frame_rate):
 
     video = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'XVID'), frame_rate, (width, height))
 
+    print("images length: ", len(images))
     for image in images:
         img_path = os.path.join(image_folder, image)
         video.write(cv2.imread(img_path))
@@ -62,40 +65,43 @@ password = "santacruz"
 images_folder = "images"
 videos_folder = "videos"
 output_folder = "output"
-capture_interval = 0.02  # seconds
-video_interval = 10  # seconds (e.g., create a video every 60 seconds)
-frame_rate = 50  # frames per second
-
+capture_interval = 0.05  # seconds
+video_length = 10  # seconds (e.g., create a video every 60 seconds)
+fps = 5  # frames per second
+shutil.rmtree(images_folder, ignore_errors=True)
+shutil.rmtree(videos_folder, ignore_errors=True)
+shutil.rmtree(output_folder, ignore_errors=True)
 # Create the images, videos, and output folders if they don't exist
 os.makedirs(images_folder, exist_ok=True)
 os.makedirs(videos_folder, exist_ok=True)
 os.makedirs(output_folder, exist_ok=True)
 
 start_time = time.time()
+num_images = 0
 
 while True:
     current_time = time.time()
     
     # Capture images at the specified interval
-    if (current_time - start_time) % capture_interval < 1:
-        image_content = get_raspberry_pi_image(url, username, password)
-        if image_content:
-            timestamp = time.strftime("%Y%m%d_%H%M%S")
-            image_path = os.path.join(images_folder, f"raspberry_pi_image_{timestamp}.jpg")
-            with open(image_path, "wb") as image_file:
-                image_file.write(image_content)
-                print(f"Image saved successfully at {image_path}")
-        else:
-            print("Failed to retrieve the image.")
+    image_content = get_raspberry_pi_image(url, username, password)
+    if image_content:
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        image_path = os.path.join(images_folder, f"raspberry_pi_image_{num_images}.jpg")
+        with open(image_path, "wb") as image_file:
+            image_file.write(image_content)
+            num_images += 1
+            print(f"Image saved successfully at {image_path}, {num_images} images captured.")
+    else:
+        print("Failed to retrieve the image.")
 
-    # Create video at the specified interval
-    if (current_time - start_time) % video_interval < 1:
+    if num_images >= video_length * fps:
         video_filename = f"raspberry_pi_video_{time.strftime('%Y%m%d_%H%M%S')}.avi"
         video_path = os.path.join(videos_folder, video_filename)
-        stitch_images_to_video(images_folder, video_path, frame_rate)
-        
+        stitch_images_to_video(images_folder, video_path, fps)
+        num_images = 0
+
         # Process video with GPT-4O
-        response = process_and_prompt(video_path, BASIC_PROMPT, seconds_per_frame=1)
+        response = process_and_prompt(video_path, BASIC_PROMPT, seconds_per_frame=1, use_all_frames=True)
         output_filename = f"gpt4o_output_{time.strftime('%Y%m%d_%H%M%S')}.txt"
         output_path = os.path.join(output_folder, output_filename)
         with open(output_path, "w") as output_file:
@@ -106,5 +112,3 @@ while True:
         for img in os.listdir(images_folder):
             if img.endswith(".jpg"):
                 os.remove(os.path.join(images_folder, img))
-
-    time.sleep(1)  # Wait for 1 second to avoid tight loop

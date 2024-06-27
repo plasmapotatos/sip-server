@@ -1,0 +1,7 @@
+The frames provided show a static view of a wooden ceiling. There is no visible movement or activity in these frames that would indicate a person is present, let alone in distress. 
+
+Based on the frames, there is no evidence of a fall, seizure, or any other signs of distress.
+
+<output>no distress<output>
+
+Immediate course of action: No action required based on the provided frames. If there is concern for an individual's well-being, it is recommended to check other camera angles or locations, or to physically check on the person.
