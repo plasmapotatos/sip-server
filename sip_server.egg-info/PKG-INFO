@@ -1,0 +1,7 @@
+Metadata-Version: 2.1
+Name: sip-server
+Version: 0.1.0
+Requires-Dist: requests
+Requires-Dist: opencv-python
+Requires-Dist: moviepy
+Requires-Dist: openai
