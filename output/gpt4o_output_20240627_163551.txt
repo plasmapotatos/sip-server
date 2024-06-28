@@ -1,5 +1,0 @@
-The frames provided show a static view of a wooden ceiling. There is no visible person or any activity occurring in these frames. Without any visual evidence of a person or any movement, it is not possible to assess any signs of distress, falls, or seizures.
-
-<output>no distress</output>
-
-Immediate course of action: Ensure the camera is positioned correctly to capture the relevant area where the person is located. If this is a health monitoring scenario, reposition the camera to ensure it captures the person’s activities and surroundings.

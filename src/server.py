@@ -70,30 +70,28 @@ def capture_images():
             with open(image_path, "wb") as image_file:
                 image_file.write(image_content)
                 num_images += 1
-                print(f"Image saved successfully at {image_path}, {num_images} images captured.")
+                #print(f"Image saved successfully at {image_path}, {num_images} images captured.")
         else:
             print("Failed to retrieve the image.")
 
-        if num_images >= video_length * fps:
-            video_filename = f"raspberry_pi_video_{time.strftime('%Y%m%d_%H%M%S')}.avi"
-            video_path = os.path.join(videos_folder, video_filename)
-            stitch_images_to_video(images_folder, video_path, fps)
-            num_images = 0
-
-            # Process video with GPT-4O
-            response = process_and_prompt(video_path, BASIC_PROMPT, seconds_per_frame=1, use_all_frames=True)
-            output_filename = f"gpt4o_output_{time.strftime('%Y%m%d_%H%M%S')}.txt"
-            output_path = os.path.join(output_folder, output_filename)
-            with open(output_path, "w") as output_file:
-                output_file.write(response)
-            print(f"GPT-4O output saved successfully at {output_path}")
-
-            # Optionally, clear images after creating the video
-            for img in os.listdir(images_folder):
-                if img.endswith(".jpg"):
-                    os.remove(os.path.join(images_folder, img))
-
         time.sleep(capture_interval)
+    video_filename = f"raspberry_pi_video_{time.strftime('%Y%m%d_%H%M%S')}.avi"
+    video_path = os.path.join(videos_folder, video_filename)
+    stitch_images_to_video(images_folder, video_path, fps)
+    num_images = 0
+
+    # Process video with GPT-4O
+    response = process_and_prompt(video_path, BASIC_PROMPT, seconds_per_frame=1, use_all_frames=True)
+    output_filename = f"gpt4o_output_{time.strftime('%Y%m%d_%H%M%S')}.txt"
+    output_path = os.path.join(output_folder, output_filename)
+    with open(output_path, "w") as output_file:
+        output_file.write(response)
+    print(f"GPT-4O output saved successfully at {output_path}")
+
+    # Optionally, clear images after creating the video
+    for img in os.listdir(images_folder):
+        if img.endswith(".jpg"):
+            os.remove(os.path.join(images_folder, img))
 
 # Configuration
 url = "http://mychateau.freeddns.org:60080/html/cam_pic.php"
