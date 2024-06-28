@@ -1,5 +1,0 @@
-Based on the frames provided, it appears that the individual is experiencing some form of distress. The sequence of images shows the person moving their hands towards their face and head, which could indicate discomfort or a potential medical issue. The rapid and repeated hand movements suggest that the person might be experiencing a seizure or another form of distress.
-
-Immediate action should be taken to ensure the person's safety. It is crucial to call emergency services and provide them with the details of the situation. If possible, stay with the person and ensure they are in a safe position, away from any objects that could cause injury.
-
-<output>seizure<output>

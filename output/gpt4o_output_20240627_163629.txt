@@ -1,5 +1,0 @@
-The frames provided show a static view of a wooden ceiling. There is no visible person or any activity in these frames. Without any visual evidence of a person or any movement, it is not possible to determine if there is any distress or abnormal activity occurring.
-
-<output>no distress</output>
-
-Immediate course of action: Ensure the camera is positioned correctly to capture the intended area and verify if the person is within the camera's view. If the person is not visible, check other cameras or locations to ensure their safety.

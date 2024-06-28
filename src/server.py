@@ -6,6 +6,7 @@ import cv2
 from utils.prompts import BASIC_PROMPT
 from utils.request_utils import process_and_prompt
 import shutil
+import threading
 
 def get_raspberry_pi_image(url, username, password):
     """
@@ -58,6 +59,40 @@ def stitch_images_to_video(image_folder, video_path, frame_rate):
     video.release()
     print(f"Video saved successfully at {video_path}")
 
+def capture_images():
+    global recording, num_images
+
+    while recording:
+        image_content = get_raspberry_pi_image(url, username, password)
+        if image_content:
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            image_path = os.path.join(images_folder, f"raspberry_pi_image_{num_images}.jpg")
+            with open(image_path, "wb") as image_file:
+                image_file.write(image_content)
+                num_images += 1
+                #print(f"Image saved successfully at {image_path}, {num_images} images captured.")
+        else:
+            print("Failed to retrieve the image.")
+
+        time.sleep(capture_interval)
+    video_filename = f"raspberry_pi_video_{time.strftime('%Y%m%d_%H%M%S')}.avi"
+    video_path = os.path.join(videos_folder, video_filename)
+    stitch_images_to_video(images_folder, video_path, fps)
+    num_images = 0
+
+    # Process video with GPT-4O
+    response = process_and_prompt(video_path, BASIC_PROMPT, seconds_per_frame=1, use_all_frames=True)
+    output_filename = f"gpt4o_output_{time.strftime('%Y%m%d_%H%M%S')}.txt"
+    output_path = os.path.join(output_folder, output_filename)
+    with open(output_path, "w") as output_file:
+        output_file.write(response)
+    print(f"GPT-4O output saved successfully at {output_path}")
+
+    # Optionally, clear images after creating the video
+    for img in os.listdir(images_folder):
+        if img.endswith(".jpg"):
+            os.remove(os.path.join(images_folder, img))
+
 # Configuration
 url = "http://mychateau.freeddns.org:60080/html/cam_pic.php"
 username = "wei"
@@ -66,8 +101,8 @@ images_folder = "images"
 videos_folder = "videos"
 output_folder = "output"
 capture_interval = 0.05  # seconds
-video_length = 10  # seconds (e.g., create a video every 60 seconds)
-fps = 5  # frames per second
+video_length = 8  # seconds (e.g., create a video every 60 seconds)
+fps = 8  # frames per second
 shutil.rmtree(images_folder, ignore_errors=True)
 shutil.rmtree(videos_folder, ignore_errors=True)
 shutil.rmtree(output_folder, ignore_errors=True)
@@ -76,39 +111,20 @@ os.makedirs(images_folder, exist_ok=True)
 os.makedirs(videos_folder, exist_ok=True)
 os.makedirs(output_folder, exist_ok=True)
 
-start_time = time.time()
+recording = False
 num_images = 0
 
-while True:
-    current_time = time.time()
-    
-    # Capture images at the specified interval
-    image_content = get_raspberry_pi_image(url, username, password)
-    if image_content:
-        timestamp = time.strftime("%Y%m%d_%H%M%S")
-        image_path = os.path.join(images_folder, f"raspberry_pi_image_{num_images}.jpg")
-        with open(image_path, "wb") as image_file:
-            image_file.write(image_content)
-            num_images += 1
-            print(f"Image saved successfully at {image_path}, {num_images} images captured.")
-    else:
-        print("Failed to retrieve the image.")
+def monitor_input():
+    global recording
+    while True:
+        user_input = input("Type 'record' to start and 'stop' to stop recording: ").strip().lower()
+        if user_input == "record" and not recording:
+            recording = True
+            threading.Thread(target=capture_images).start()
+            print("Recording started...")
+        elif user_input == "stop" and recording:
+            recording = False
+            print("Recording stopped...")
 
-    if num_images >= video_length * fps:
-        video_filename = f"raspberry_pi_video_{time.strftime('%Y%m%d_%H%M%S')}.avi"
-        video_path = os.path.join(videos_folder, video_filename)
-        stitch_images_to_video(images_folder, video_path, fps)
-        num_images = 0
-
-        # Process video with GPT-4O
-        response = process_and_prompt(video_path, BASIC_PROMPT, seconds_per_frame=1, use_all_frames=True)
-        output_filename = f"gpt4o_output_{time.strftime('%Y%m%d_%H%M%S')}.txt"
-        output_path = os.path.join(output_folder, output_filename)
-        with open(output_path, "w") as output_file:
-            output_file.write(response)
-        print(f"GPT-4O output saved successfully at {output_path}")
-
-        # Optionally, clear images after creating the video
-        for img in os.listdir(images_folder):
-            if img.endswith(".jpg"):
-                os.remove(os.path.join(images_folder, img))
+# Start monitoring user input
+monitor_input()

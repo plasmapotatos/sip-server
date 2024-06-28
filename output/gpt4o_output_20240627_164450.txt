@@ -1,5 +1,0 @@
-The frames provided show a static view of a wooden ceiling. There is no visible movement or indication of a person in distress in these frames. The camera appears to be fixed, and there are no signs of a fall or seizure.
-
-<output>no distress<output>
-
-Immediate course of action: Continue monitoring for any changes or signs of distress. If this is part of a larger video, review additional footage to ensure the person's safety.
