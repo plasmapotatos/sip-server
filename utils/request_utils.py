@@ -46,11 +46,11 @@ def process_video(video_path, seconds_per_frame=2, use_all_frames=False):
     except:
         audio_path = None
 
-    print(f"Extracted {len(base64Frames)} frames")
-    print(f"Extracted audio to {audio_path}")
+    #print(f"Extracted {len(base64Frames)} frames")
+    #print(f"Extracted audio to {audio_path}")
     return base64Frames, audio_path
 
-def prompt_gpt4o_with_frames(base64Frames, user_prompt):
+def prompt_gpt4o_with_frames_and_audio(base64Frames, user_prompt, transcription):
     # Send the combined prompt to GPT-4O
     while True:
         try:
@@ -61,7 +61,8 @@ def prompt_gpt4o_with_frames(base64Frames, user_prompt):
                 {"role": "user", "content": [
                     "These are the frames from the video.",
                     *map(lambda x: {"type": "image_url", 
-                                    "image_url": {"url": f'data:image/jpg;base64,{x}', "detail": "low"}}, base64Frames)
+                                    "image_url": {"url": f'data:image/jpg;base64,{x}', "detail": "low"}}, base64Frames),
+                    {"type": "text", "text": f"The audio transcription is: {transcription.text}"}
                     ],
                 }
                 ],
@@ -70,7 +71,6 @@ def prompt_gpt4o_with_frames(base64Frames, user_prompt):
             output = response.choices[0].message.content
             break
         except Exception as e:
-            return "fuck"
             print(f"Error: {e}")
             continue
     
@@ -80,8 +80,17 @@ def process_and_prompt(video_path, prompt, seconds_per_frame=2, use_all_frames=F
     # Process the video to get frames and audio
     base64Frames, audio_path = process_video(video_path, seconds_per_frame, use_all_frames=use_all_frames)
 
+    transcription = client.audio.transcriptions.create(
+        model="whisper-1",
+        file=open(audio_path, "rb"),
+    )
+
+    print(f"Transcription: {transcription.text}")
+
     # Get the response from GPT-4O using the base64 frames and the user prompt
-    response = prompt_gpt4o_with_frames(base64Frames, prompt)
+    response = None
+    if base64Frames:
+        response = prompt_gpt4o_with_frames_and_audio(base64Frames, prompt, transcription)
 
     return response
 

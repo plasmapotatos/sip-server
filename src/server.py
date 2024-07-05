@@ -8,6 +8,29 @@ from utils.request_utils import process_and_prompt
 import shutil
 import threading
 
+# Configuration
+url = "http://mychateau.freeddns.org:60080/html/cam_pic.php"
+username = "wei"
+password = "santacruz"
+images_folder = "images"
+videos_folder = "videos"
+output_folder = "output"
+capture_interval = 0.05  # seconds
+video_length = 8  # seconds (e.g., create a video every 60 seconds)
+fps = 8  # frames per second
+shutil.rmtree(images_folder, ignore_errors=True)
+shutil.rmtree(videos_folder, ignore_errors=True)
+shutil.rmtree(output_folder, ignore_errors=True)
+# Create the images, videos, and output folders if they don't exist
+os.makedirs(images_folder, exist_ok=True)
+os.makedirs(videos_folder, exist_ok=True)
+os.makedirs(output_folder, exist_ok=True)
+
+recording = False
+num_images = 0
+s = requests.Session()
+s.auth = HTTPBasicAuth(username, password)
+
 def get_raspberry_pi_image(url, username, password):
     """
     Sends a GET request to the specified URL with basic authentication and returns the image content.
@@ -21,7 +44,7 @@ def get_raspberry_pi_image(url, username, password):
     bytes: The content of the image.
     """
     try:
-        response = requests.get(url, auth=HTTPBasicAuth(username, password))
+        response = s.get(url)
         response.raise_for_status()  # Raise an error for bad status codes
         return response.content
     except requests.exceptions.RequestException as e:
@@ -61,20 +84,21 @@ def stitch_images_to_video(image_folder, video_path, frame_rate):
 
 def capture_images():
     global recording, num_images
-
     while recording:
         image_content = get_raspberry_pi_image(url, username, password)
+        if num_images > 100:
+            break
         if image_content:
-            timestamp = time.strftime("%Y%m%d_%H%M%S")
-            image_path = os.path.join(images_folder, f"raspberry_pi_image_{num_images}.jpg")
+            image_path = os.path.join(images_folder, f"raspberry_pi_image_%09d.jpg" % num_images)
             with open(image_path, "wb") as image_file:
                 image_file.write(image_content)
                 num_images += 1
-                #print(f"Image saved successfully at {image_path}, {num_images} images captured.")
+                print(f"Image saved successfully at {image_path}, {num_images} images captured.")
         else:
             print("Failed to retrieve the image.")
+        #time.sleep(capture_interval)
 
-        time.sleep(capture_interval)
+    print(f"Total images captured: {num_images}")
     video_filename = f"raspberry_pi_video_{time.strftime('%Y%m%d_%H%M%S')}.avi"
     video_path = os.path.join(videos_folder, video_filename)
     stitch_images_to_video(images_folder, video_path, fps)
@@ -93,28 +117,8 @@ def capture_images():
         if img.endswith(".jpg"):
             os.remove(os.path.join(images_folder, img))
 
-# Configuration
-url = "http://mychateau.freeddns.org:60080/html/cam_pic.php"
-username = "wei"
-password = "santacruz"
-images_folder = "images"
-videos_folder = "videos"
-output_folder = "output"
-capture_interval = 0.05  # seconds
-video_length = 8  # seconds (e.g., create a video every 60 seconds)
-fps = 8  # frames per second
-shutil.rmtree(images_folder, ignore_errors=True)
-shutil.rmtree(videos_folder, ignore_errors=True)
-shutil.rmtree(output_folder, ignore_errors=True)
-# Create the images, videos, and output folders if they don't exist
-os.makedirs(images_folder, exist_ok=True)
-os.makedirs(videos_folder, exist_ok=True)
-os.makedirs(output_folder, exist_ok=True)
-
-recording = False
-num_images = 0
-
 def monitor_input():
+    start_time = time.time()
     global recording
     while True:
         user_input = input("Type 'record' to start and 'stop' to stop recording: ").strip().lower()
@@ -125,6 +129,9 @@ def monitor_input():
         elif user_input == "stop" and recording:
             recording = False
             print("Recording stopped...")
+            end_time = time.time()
+            print(f"Recording duration: {end_time - start_time:.2f} seconds.")
+
 
 # Start monitoring user input
 monitor_input()
