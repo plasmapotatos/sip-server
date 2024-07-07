@@ -5,6 +5,8 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor  # Import ThreadPoolExecutor or ProcessPoolExecutor
 from utils.request_utils import process_and_prompt  # Import your processing function
 from utils.prompts import BASIC_PROMPT
+from agents.fall_detection_agent import test_for_fall
+from agents.action_planning_agent import plan_actions
 
 # RTSP stream URL
 RTSP_URL = "rtsp://192.168.1.25:8554/cam_with_audio"
@@ -16,6 +18,18 @@ OUTPUT_DIR = "output"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 future = None
+
+def pipeline(filename):
+    # Test for a fall
+    fall_detected = test_for_fall(filename)
+
+    if fall_detected:
+        # Plan actions
+        response = plan_actions(filename)
+    else:
+        response = "No fall detected. No action needed."
+
+    return response
 
 # Function to capture and process video
 def capture_and_process():
@@ -47,7 +61,7 @@ def capture_and_process():
 
 
         # Process the video asynchronously
-        future = executor.submit(process_and_prompt, filename, BASIC_PROMPT, seconds_per_frame=1, use_all_frames=False)  # Adjust parameters as needed
+        future = executor.submit(pipeline, filename)  # Adjust parameters as needed
 
         # Sleep for a short time to avoid overlapping chunks (optional)
         time.sleep(1)

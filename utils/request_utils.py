@@ -62,7 +62,7 @@ def prompt_gpt4o_with_frames_and_audio(base64Frames, user_prompt, transcription)
                     "These are the frames from the video.",
                     *map(lambda x: {"type": "image_url", 
                                     "image_url": {"url": f'data:image/jpg;base64,{x}', "detail": "low"}}, base64Frames),
-                    {"type": "text", "text": f"The audio transcription is: {transcription.text}"}
+                    {"type": "text", "text": f"The audio transcription is: {transcription}"}
                     ],
                 }
                 ],
@@ -80,12 +80,15 @@ def process_and_prompt(video_path, prompt, seconds_per_frame=2, use_all_frames=F
     # Process the video to get frames and audio
     base64Frames, audio_path = process_video(video_path, seconds_per_frame, use_all_frames=use_all_frames)
 
-    transcription = client.audio.transcriptions.create(
-        model="whisper-1",
-        file=open(audio_path, "rb"),
-    )
+    if audio_path is not None:
+        transcription = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=open(audio_path, "rb"),
+        ).text
+    else:
+        transcription = ""
 
-    print(f"Transcription: {transcription.text}")
+    print(f"Transcription: {transcription}")
 
     # Get the response from GPT-4O using the base64 frames and the user prompt
     response = None
