@@ -1,7 +1,0 @@
-setup.py
-src/__init__.py
-src/server.py
-src/sip_server.egg-info/PKG-INFO
-src/sip_server.egg-info/SOURCES.txt
-src/sip_server.egg-info/dependency_links.txt
-src/sip_server.egg-info/top_level.txt
