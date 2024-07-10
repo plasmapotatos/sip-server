@@ -1,3 +1,4 @@
+README.md
 setup.py
 sip_server.egg-info/PKG-INFO
 sip_server.egg-info/SOURCES.txt
@@ -6,7 +7,17 @@ sip_server.egg-info/entry_points.txt
 sip_server.egg-info/requires.txt
 sip_server.egg-info/top_level.txt
 src/__init__.py
+src/ffmpeg_server.py
 src/server.py
+src/sip-server/__init__.py
+src/sip-server/setup.py
+src/sip-server/src/__init__.py
+src/sip-server/src/ffmpeg_server.py
+src/sip-server/src/server.py
+src/sip-server/utils/__init__.py
+src/sip-server/utils/prompts.py
+src/sip-server/utils/request_utils.py
+test/test.py
 utils/__init__.py
 utils/prompts.py
 utils/request_utils.py

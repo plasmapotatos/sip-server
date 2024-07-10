@@ -9,7 +9,7 @@ from agents.fall_detection_agent import test_for_fall
 from agents.action_planning_agent import plan_actions
 
 # RTSP stream URL
-RTSP_URL = "rtsp://192.168.1.25:8554/cam_with_audio"
+RTSP_URL = "rtsp://169.233.151.219:8554/cam_with_audio"
 
 # Directory to save clips
 SAVE_DIR = "saved_clips"

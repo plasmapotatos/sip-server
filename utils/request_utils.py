@@ -5,7 +5,7 @@ from openai import OpenAI
 
 import os
 import openai
-from utils.prompts import BASIC_PROMPT
+from utils.prompts import ACTION_PLANNING_PROMPT
 
 # Set your OpenAI API key
 MODEL = "gpt-4o"
@@ -99,7 +99,7 @@ def process_and_prompt(video_path, prompt, seconds_per_frame=2, use_all_frames=F
 
 if __name__ == "__main__":
     video_path = 'video_1.avi'  # Replace with your video path
-    user_prompt = BASIC_PROMPT
+    user_prompt = ACTION_PLANNING_PROMPT
 
     response = process_and_prompt(video_path, user_prompt, seconds_per_frame=0.2)
     print(response)
