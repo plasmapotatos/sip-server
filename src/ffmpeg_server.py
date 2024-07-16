@@ -1,21 +1,27 @@
 import subprocess
 import os
 import time
+import re
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import messaging
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor  # Import ThreadPoolExecutor or ProcessPoolExecutor
 from utils.request_utils import process_and_prompt  # Import your processing function
 from utils.prompts import BASIC_PROMPT
 from agents.fall_detection_agent import test_for_fall
 from agents.action_planning_agent import plan_actions
+from src.actions import speak, call, push_notification
 
 # RTSP stream URL
-RTSP_URL = "rtsp://169.233.151.219:8554/cam_with_audio"
+RTSP_URL = "rtsp://169.233.172.175:8554/cam_with_audio"
 
 # Directory to save clips
 SAVE_DIR = "saved_clips"
 os.makedirs(SAVE_DIR, exist_ok=True)
 OUTPUT_DIR = "output"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+token = 'cA-0fbQARrO2ijGZ1UExle:APA91bEb0FCWo9QMu_eSuL7MhJSDsdsRJQiqlBifoQgRyouUnqxtPbYamiMpMy2_azJcWl3yg8LsfbusWWWJImwA6_F02-2dN1WufQXJ17oF3rz2kxsNr_4-v-GPfx_KFcelDe-XdbZs'
 
 future = None
 
@@ -59,6 +65,14 @@ def capture_and_process():
             with open(output_path, "w") as output_file:
                 output_file.write(response)
 
+            global token
+            function_calls = re.findall(r'(\w+)\((.*?)\)', response)
+            token = 'fFyqfZJWSUuNQS2cA1ec-A:APA91bGgD67k1KRb5pvrS5ViX28ufl_lRzz8BjKqYqbk7iHnmknyboM6kB0gZC_pRbtb1kvaNdG6zmX9phfJCloRqD4mIOuZwwyvTyms9KdO0naZky-6ebpJ4SuVgMkaaSzZwcTrjgmy'
+
+            print(function_calls)
+            for func_name, args in function_calls:
+                new_args = f"{args}, '{token}'"  # Add the token to the arguments
+                exec(f"{func_name}({new_args})")
 
         # Process the video asynchronously
         future = executor.submit(pipeline, filename)  # Adjust parameters as needed
@@ -66,8 +80,9 @@ def capture_and_process():
         # Sleep for a short time to avoid overlapping chunks (optional)
         time.sleep(1)
 
-# Prompt for ChatGPT processing (example)
-prompt = "Describe the scene in the video."
+# Initialize the Firebase Admin SDK
+cred = credentials.Certificate('fir-pushnotifications-17c1a-firebase-adminsdk-2gn9p-192b0078c5.json')
+firebase_admin.initialize_app(cred)
 
 # Set up ThreadPoolExecutor with desired number of threads
 executor = ThreadPoolExecutor(max_workers=2)  # Adjust max_workers as needed

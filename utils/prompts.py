@@ -6,13 +6,10 @@ ACTION_PLANNING_PROMPT = """You are an agent assigned to monitor the health of a
 ```python
 call(string phone_number)
 sms(string phone_number)
-speak(string text)
+speak(string message, int desired_volume)
 listen_for_feedback()
-push_notification(string text)
-email(string text)
-flashlight()
-alarm()
-vibrate()
+push_notification(string title, string body)
+vibrate(int duration_in_milliseconds)
 ```
 Additionally, you are given the following list of phone numbers: 
 ```json
@@ -26,7 +23,7 @@ First, present your output in a non-conversational format in python code. Then, 
 An example output is below:
 
 ```python
-speak("are you okay?")
+speak("are you okay?", 5)
 listen_for_feedback()
 ```
 The person appears to have tripped and fallen on the floor. However, the person seems to only have received minor injuries, as they have gotten back up. So, we should call the Emergency Contact rather than the hospital or the emergency hotline. Then, we send a push notification asking if the person is okay.
