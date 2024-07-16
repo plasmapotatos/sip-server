@@ -9,6 +9,12 @@ sip_server.egg-info/top_level.txt
 src/__init__.py
 src/ffmpeg_server.py
 src/server.py
+src/pipeline/__init__.py
+src/pipeline/agent.py
+src/pipeline/eval.py
+src/pipeline/loader.py
+src/pipeline/request.py
+src/pipeline/testing/__init__.py
 src/sip-server/__init__.py
 src/sip-server/setup.py
 src/sip-server/src/__init__.py
