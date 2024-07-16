@@ -51,7 +51,7 @@ pyparsing==3.1.2
 python-xlib==0.33
 requests==2.32.3
 rsa==4.9
--e git+https://github.com/plasmapotatos/sip-server.git@94d15703f82076a90c60b6507690d8446b965f5f#egg=sip_server
+-e git+https://github.com/plasmapotatos/sip-server.git@c9d9583fb538982aedc787251f4e4cd77dcd2b5e#egg=sip_server
 six==1.16.0
 sniffio==1.3.1
 tqdm==4.66.4

@@ -1,52 +1,18 @@
-import subprocess
-import os
-import time
+import re
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import messaging
+from src.actions import speak, call, push_notification
 
-# RTSP stream URL
-rtsp_url = 'rtsp://192.168.1.25:8554/cam_with_audio'
+with open("output/gpt4o_output_20240716-161342.txt", "r") as output_file:
+    response = output_file.read()
+function_calls = re.findall(r'(\w+)\((.*?)\)', response)
+token = 'fFyqfZJWSUuNQS2cA1ec-A:APA91bGgD67k1KRb5pvrS5ViX28ufl_lRzz8BjKqYqbk7iHnmknyboM6kB0gZC_pRbtb1kvaNdG6zmX9phfJCloRqD4mIOuZwwyvTyms9KdO0naZky-6ebpJ4SuVgMkaaSzZwcTrjgmy'
 
-# Directory to save clips
-save_path = 'saved_clips'
-if not os.path.exists(save_path):
-    os.makedirs(save_path)
+cred = credentials.Certificate('fir-pushnotifications-17c1a-firebase-adminsdk-2gn9p-192b0078c5.json')
+firebase_admin.initialize_app(cred)
 
-ffmpeg_process = None
-
-def start_recording():
-    global ffmpeg_process
-    if ffmpeg_process is None:
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        clip_name = f'clip_{timestamp}.mp4'
-        clip_path = os.path.join(save_path, clip_name)
-
-        ffmpeg_command = [
-            'ffmpeg',
-            '-i', rtsp_url,
-            '-c', 'copy',
-            clip_path
-        ]
-
-        # Redirect stdout and stderr to subprocess.DEVNULL to silence FFmpeg output
-        ffmpeg_process = subprocess.Popen(ffmpeg_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print(f"Recording started. Saving to {clip_path}. Type 'stop' to stop recording.")
-
-def stop_recording():
-    global ffmpeg_process
-    if ffmpeg_process is not None:
-        ffmpeg_process.terminate()
-        ffmpeg_process = None
-        print("Recording stopped. Type 'start' to start recording again.")
-
-while True:
-    command = input("Type 'start' to start recording, 'stop' to stop recording, and 'quit' to exit: ").strip().lower()
-    if command == 'start':
-        start_recording()
-    elif command == 'stop':
-        stop_recording()
-    elif command == 'quit':
-        stop_recording()
-        break
-    else:
-        print("Invalid command. Please type 'start', 'stop', or 'quit'.")
-
-print("Program terminated.")
+print(function_calls)
+for func_name, args in function_calls:
+    new_args = f"{args}, '{token}'"  # Add the token to the arguments
+    exec(f"{func_name}({new_args})")
