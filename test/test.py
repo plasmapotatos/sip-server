@@ -1,52 +1,36 @@
-import subprocess
-import os
-import time
+import re
 
-# RTSP stream URL
-rtsp_url = 'rtsp://192.168.1.25:8554/cam_with_audio'
+def get_titles_from_input(input_text):
+    # Extract titles from the input text
+    titles = []
+    for line in input_text.strip().split('\n'):
+        title = re.split(' - Authors:', line)[0].strip()
+        titles.append(title)
+    return titles
 
-# Directory to save clips
-save_path = 'saved_clips'
-if not os.path.exists(save_path):
-    os.makedirs(save_path)
+def get_titles_from_bib(file_path):
+    # Extract titles from the .bib file
+    with open(file_path, 'r') as file:
+        bib_data = file.read()
+    return re.findall(r'title = {([^}]+)}', bib_data)
 
-ffmpeg_process = None
+def main():
+    input_text = input("Enter the input titles and authors:\n")
+    bib_file_path = input("Enter the path to the .bib file:\n")
 
-def start_recording():
-    global ffmpeg_process
-    if ffmpeg_process is None:
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        clip_name = f'clip_{timestamp}.mp4'
-        clip_path = os.path.join(save_path, clip_name)
+    input_titles = get_titles_from_input(input_text)
+    bib_titles = get_titles_from_bib(bib_file_path)
 
-        ffmpeg_command = [
-            'ffmpeg',
-            '-i', rtsp_url,
-            '-c', 'copy',
-            clip_path
-        ]
+    # Check for titles not found in the .bib file
+    not_found_titles = [title for title in input_titles if title not in bib_titles]
 
-        # Redirect stdout and stderr to subprocess.DEVNULL to silence FFmpeg output
-        ffmpeg_process = subprocess.Popen(ffmpeg_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print(f"Recording started. Saving to {clip_path}. Type 'stop' to stop recording.")
-
-def stop_recording():
-    global ffmpeg_process
-    if ffmpeg_process is not None:
-        ffmpeg_process.terminate()
-        ffmpeg_process = None
-        print("Recording stopped. Type 'start' to start recording again.")
-
-while True:
-    command = input("Type 'start' to start recording, 'stop' to stop recording, and 'quit' to exit: ").strip().lower()
-    if command == 'start':
-        start_recording()
-    elif command == 'stop':
-        stop_recording()
-    elif command == 'quit':
-        stop_recording()
-        break
+    # Print the titles that are not found
+    if not_found_titles:
+        print("Titles not found in the .bib file:")
+        for title in not_found_titles:
+            print(title)
     else:
-        print("Invalid command. Please type 'start', 'stop', or 'quit'.")
+        print("All titles were found in the .bib file.")
 
-print("Program terminated.")
+if __name__ == "__main__":
+    main()
