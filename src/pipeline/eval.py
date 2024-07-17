@@ -3,6 +3,7 @@ from loader import load_answer_files
 from agent import update_evaluation_json
 from request import BaselineModel
 from sklearn.metrics import precision_score, recall_score, f1_score
+from tqdm import tqdm
 
 def get_y_true(ground_truth_directory):
     y_true = []
@@ -10,8 +11,10 @@ def get_y_true(ground_truth_directory):
 
     y_true_files = load_answer_files(ground_truth_directory)
 
-    for file_path in y_true_files:
-        with open(file_path) as f: s = f.readline()
+    # Wrapping the entire file processing loop with tqdm
+    for file_path in tqdm(y_true_files, desc="Processing files", unit="file"):
+        with open(file_path) as f:
+            s = f.readline()
         try:
             firstlines.append(s)
             if(int(s) >= 180 or int(s) == 0):
