@@ -45,13 +45,14 @@ class BaselineModel:
 
         # Extract audio from video
         audio_path = f"{base_video_path}.mp3"
-        clip = VideoFileClip(video_path)
-        clip.audio.write_audiofile(audio_path, bitrate="32k")
-        clip.audio.close()
-        clip.close()
+        # clip = VideoFileClip(video_path)
+        # clip.audio.write_audiofile(audio_path, bitrate="32k")
+        # clip.audio.close()
+        # clip.close()
 
         # print(f"Extracted {len(base64Frames)} frames")
         # print(f"Extracted audio to {audio_path}")
+        print(video_path + " done.")
         return base64Frames, audio_path
     
     #takes the list of images and feeds it into GPT-4o to get either yes or no
