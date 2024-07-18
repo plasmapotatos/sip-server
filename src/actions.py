@@ -1,6 +1,7 @@
 from datetime import datetime
 import os
 import subprocess
+from time import sleep
 from utils.message import create_message
 from firebase_admin import messaging
 from utils.request_utils import get_transcription
@@ -32,6 +33,11 @@ def call(number, token):
 
 def push_notification(title, body, token):
     print(f"Push Notification: {title} - {body}")
+    data = {
+        'action': 'push_notification',
+        'title': title,
+        'body': body
+    }
     message = messaging.MulticastMessage(
         notification=messaging.Notification(
             title=title,
@@ -40,7 +46,8 @@ def push_notification(title, body, token):
         tokens=[token],
         android=messaging.AndroidConfig(
             priority='high'
-        )
+        ),
+        data=data
     )
     response = messaging.send_multicast(message)
 
@@ -56,7 +63,9 @@ def vibrate(duration, token):
     response = messaging.send_multicast(vibrate_message)
     print('Successfully sent message:', response)
 
-def listen_for_feedback():
+def listen_for_feedback(duration):
+    integer_duration = float(duration)
+    sleep(integer_duration)
     RTSP_URL = "rtsp://169.233.172.175:8554/cam_with_audio"
     response_path = "./response"
     os.makedirs(response_path, exist_ok=True)

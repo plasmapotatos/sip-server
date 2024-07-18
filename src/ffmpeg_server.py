@@ -29,15 +29,15 @@ token = 'fFyqfZJWSUuNQS2cA1ec-A:APA91bGGQ-_r9xHje45dILAWkhRyiFOLyQvQslwy5zmE36yl
 
 def pipeline(filename):
     # Test for a fall
-    fall_detected = test_for_fall(filename)
+    fall_detected, output = test_for_fall(filename)
 
     if fall_detected:
         # Plan actions
         print("Fall detected. Planning actions...")
         response = plan_actions(filename)
     else:
-        print("No fall detected. No action needed.")
-        response = "No fall detected. No action needed."
+        print(f"No fall detected. No action needed. Reasoning: {output}")
+        response = "No fall detected. No action needed. Reasoning: " + output
 
     return response
 
@@ -50,7 +50,13 @@ def build_conversation(agent, client):
 def process_result(question, result):
     return result[len(question):]
 
-def chat_with_client(agent, client):
+def estimate_tts_duration(text, words_per_minute=170):
+    words = len(text.split())
+    duration_minutes = words / words_per_minute
+    duration_seconds = duration_minutes * 60
+    return duration_seconds    
+
+def chat_with_client(agent, client, previous):
     done = False
     while not done:
         conversation = build_conversation(agent, client)
@@ -62,12 +68,13 @@ def chat_with_client(agent, client):
         function_calls = re.findall(r'(\w+)\((.*?)\)', response)
         print("Function calls:", function_calls)
         done = True
-        previous_question = ""
+        previous_question = previous
         for func_name, args in function_calls:
             if func_name != 'listen_for_feedback':
                 new_args = f"{args}, '{token}'"  # Add the token to the arguments
             else:
-                new_args = ""
+                estimated_duration = estimate_tts_duration(previous_question)
+                new_args = f"'{estimated_duration}'"
             exec(f"""global result
 result = {func_name}({new_args})""")
             if func_name == 'speak':
@@ -103,6 +110,8 @@ def capture_video():
 
         yield filename
 
+        time.sleep(8)
+
 # Function to process each video chunk
 def process_video_chunk(filename):
     response = pipeline(filename)
@@ -116,18 +125,31 @@ def process_video_chunk(filename):
     agent = []
     client = []
     for func_name, args in function_calls:
-        new_args = f"{args}, '{token}'"  # Add the token to the arguments
-        result = exec(f"{func_name}({new_args})")
+        if func_name != 'listen_for_feedback':
+            new_args = f"{args}, '{token}'"  # Add the token to the arguments
+        else:
+            estimated_duration = estimate_tts_duration(previous_question)
+            new_args = f"'{estimated_duration}'"
+        exec(f"""global result
+result = {func_name}({new_args})""")
         if func_name == 'speak':
-            agent.append(args)
+            previous_question = args[:-3]
+            agent.append(args[:-3])
         if func_name == 'listen_for_feedback':
+            #print("previous_question:", previous_question)
+            #print("result:", result)
+            processed_result = process_result(previous_question, result)
+            #print("processed_result:", processed_result)
             client.append(result)
-            chat_with_client(agent, client)
+            chat_with_client(agent, client, previous_question)
 
 if __name__ == "__main__":
-    # Initialize the Firebase Admin SDK
-    cred = credentials.Certificate('fir-pushnotifications-17c1a-firebase-adminsdk-2gn9p-192b0078c5.json')
-    firebase_admin.initialize_app(cred)
+    # # Initialize the Firebase Admin SDK
+    # cred = credentials.Certificate('fir-pushnotifications-17c1a-firebase-adminsdk-2gn9p-192b0078c5.json')
+    # firebase_admin.initialize_app(cred)
+
+    fall_video_path = "falls/clip_20240717-114123.mp4"
+    #process_video_chunk(fall_video_path)
 
     # Set up ThreadPoolExecutor with desired number of threads
     executor = ThreadPoolExecutor(max_workers=4)  # Adjust max_workers as needed
