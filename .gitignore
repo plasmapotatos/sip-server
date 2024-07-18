@@ -4,3 +4,6 @@
 /saved_clips/
 fir-pushnotifications-17c1a-firebase-adminsdk-2gn9p-192b0078c5.json
 response/
+/data/
+__pycache__/ 
+sip_server.egg-info/
