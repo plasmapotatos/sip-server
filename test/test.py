@@ -6,8 +6,8 @@ from src.actions import speak, call, push_notification
 from src.ffmpeg_server import chat_with_client, build_conversation
 from utils.prompts import CONVERSATION_PROMPT
 
-agent = ["Are you okay?"]
-client = ["Yes, I'm fine."]
+agent = []
+client = []
 
 conversation = build_conversation(agent, client)
 prompt = CONVERSATION_PROMPT.format(conversation=conversation)

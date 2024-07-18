@@ -24,7 +24,7 @@ def test_for_fall(filename):
         output = True
     else:
         output = False
-    return output
+    return output, response
 
 if __name__ == "__main__":
     filename = 'saved_clips/clip_20240705-193514.mp4'  # Replace with your video path
