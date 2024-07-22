@@ -1,5 +1,6 @@
 import av
 import numpy as np
+import torch
 from transformers import VideoLlavaProcessor, VideoLlavaForConditionalGeneration
 
 def read_video_pyav(container, indices):
@@ -22,8 +23,13 @@ prompt = "USER: <video>Does the person fall in this video? ASSISTANT:"
 video_path = "./data/Videos/video_(1).avi"
 container = av.open(video_path)
 
+if(torch.cuda.is_available()):
+    device = torch.device("cuda")
+else:
+    device = torch.device("cpu")
+
 # sample uniformly 8 frames from the video
-total_frames = container.streams.video[0].frames
+total_frames = container.streams.video[0].frames3
 indices = np.arange(0, total_frames, total_frames / 8).astype(int)
 clip = read_video_pyav(container, indices)
 
