@@ -87,6 +87,16 @@ class BaselineModel:
             predictions.append(output)
 
         return predictions
+    
+    def predict_custom(self, directory, vidnums):
+        video_paths = load_vids(directory)
+        predictions = []
+
+        for n in vidnums:
+            output = self.get_response(vid_path=video_paths[n])
+            predictions.append(output)
+
+        return predictions
 
 class VideoLLaVa:
     def __init__(self, model_name, seconds_per_frame=1, custom_max_frames=-1):
