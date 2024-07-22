@@ -5,6 +5,9 @@ import cv2
 from moviepy.editor import VideoFileClip
 import time
 import base64
+import av
+import numpy as np
+from transformers import VideoLlavaProcessor, VideoLlavaForConditionalGeneration
 
 class BaselineModel:
     def __init__(self, model_name, seconds_per_frame=1, custom_max_frames=-1):
@@ -84,6 +87,13 @@ class BaselineModel:
             predictions.append(output)
 
         return predictions
+
+class VideoLLaVa:
+    def __init__(self, model_name, seconds_per_frame=1, custom_max_frames=-1):
+        self.model_name = model_name
+        self.MODEL = VideoLlavaForConditionalGeneration.from_pretrained("LanguageBind/Video-LLaVA-7B-hf")
+        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        
 
 if __name__ == '__main__':
     predictions = BaselineModel('gpt-4o').predict(directory='./src/pipeline/testing')
