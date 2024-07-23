@@ -76,7 +76,7 @@ def evaluate(y_true, results):
 def bane_of_my_existence():
     vidnums = []
 
-    while(len(vidnums)<20):
+    while(len(vidnums)<30):
         n = random.randint(1, 330)
         if(vidnums.count(n) == 0):
             vidnums.append(n)
@@ -86,22 +86,22 @@ def bane_of_my_existence():
 
 if __name__ == '__main__':
     vid_directory = './data/Videos'
-    out_file = 'eval_array.json'
+    out_file = './src/pipeline/eval_array.json'
     grnd_truth_directory="./data/Annotation_files"
-    seperate_file = 'all_eval_results.json'
+    separate_file = './src/pipeline/all_eval_results.json'
 
     total_precision = []
     total_recall = []
     total_f1 = []
 
-    for i in range(10):
+    for i in range(11, 11):
         k = bane_of_my_existence()
 
         print(k)
         update_evaluation_json_custom(video_directory=vid_directory, output_file=out_file, model=BaselineModel('gpt-4o'), vidnums=k)
 
         # get results array (res) from json file
-        with open('eval_array.json', 'r') as f:
+        with open(out_file, 'r') as f:
             results = json.load(f)
 
         y_true = get_y_true_custom("./data/Annotation_files", k)
@@ -122,13 +122,42 @@ if __name__ == '__main__':
         print(f"Recall: {evaluation_metrics['recall']:.3f}")
         print(f"F1 Score: {evaluation_metrics['f1_score']:.3f}")
 
-        total_precision += evaluation_metrics['precision']
-        total_recall += evaluation_metrics['recall']
-        total_f1 += evaluation_metrics['f1_score']
+        total_precision.append(evaluation_metrics['precision'])
+        total_recall.append(evaluation_metrics['recall'])
+        total_f1.append(evaluation_metrics['f1_score'])
+        try:
+            with open(separate_file, 'r') as file:
+                data = json.load(file)
+        except Exception as e:
+            print(e)
+            data = []
+        
+        new_dict = {
+            'ID': i,
+            'Video IDs': k,
+            'Model Predictions': results,
+            'Ground Truth': y_true,
+            'Precision': evaluation_metrics['precision'],
+            'Recall': evaluation_metrics['recall'],
+            'F1 Score': evaluation_metrics['f1_score']
+        }
+        data.append(new_dict)
 
-        with open(seperate_file, 'w') as outfile:
-            json.dump(results, outfile, indent=4)
+        with open(separate_file, 'w') as outfile:
+            json.dump(data, outfile, indent=4)
     
+    with open(separate_file, 'r') as file:
+        data = json.load(file)
+
+    total_precision = []
+    total_recall = []
+    total_f1 = []
+
+    for dict1 in data:
+        total_precision.append(dict1["Precision"])
+        total_recall.append(dict1["Recall"])
+        total_f1.append(dict1["F1 Score"])
+
     print(total_precision)
     print(total_recall)
     print(total_f1)
@@ -141,3 +170,20 @@ if __name__ == '__main__':
 
     print(statistics.mean(total_f1))
     print(statistics.stdev(total_f1))
+
+    with open(separate_file, 'r') as file:
+        data = json.load(file)
+
+    new_dict = {
+        'id': 'Final Evaluation',
+        'Precision (Mean)': statistics.mean(total_precision),
+        'Precision (Standard Deviation)': statistics.stdev(total_precision),
+        'Recall (Mean)': statistics.mean(total_recall),
+        'Recall (Standard Deviation)': statistics.stdev(total_recall),
+        'F1 Score (Mean)': statistics.mean(total_f1),
+        'F1 Score (Standard Deviation)': statistics.stdev(total_f1)
+    }
+    data.append(new_dict)
+
+    with open(separate_file, 'w') as outfile:
+        json.dump(data, outfile, indent=4)
