@@ -2,7 +2,7 @@ import json
 import random
 from loader import load_answer_files
 from agent import update_evaluation_json, update_evaluation_json_custom
-from request import BaselineModel
+from request import BaselineModel, VideoLLaVA
 from sklearn.metrics import precision_score, recall_score, f1_score
 from tqdm import tqdm
 import statistics
@@ -88,21 +88,25 @@ if __name__ == '__main__':
     vid_directory = './data/Videos'
     out_file = './src/pipeline/eval_array.json'
     grnd_truth_directory="./data/Annotation_files"
-    separate_file = './src/pipeline/all_eval_results.json'
+    separate_file = './src/pipeline/videollava_eval.json'
 
     total_precision = []
     total_recall = []
     total_f1 = []
 
-    for i in range(11, 11):
+    for i in range(1, 11):
         k = bane_of_my_existence()
 
         print(k)
-        update_evaluation_json_custom(video_directory=vid_directory, output_file=out_file, model=BaselineModel('gpt-4o'), vidnums=k)
+        update_evaluation_json_custom(video_directory=vid_directory, output_file=out_file, model=VideoLLaVA('Video-LLaVA'), vidnums=k)
 
         # get results array (res) from json file
         with open(out_file, 'r') as f:
             results = json.load(f)
+        
+        predictions = []
+        for r in results:
+            predictions.append(r.split('ASSISTANT: ')[1][:1])
 
         y_true = get_y_true_custom("./data/Annotation_files", k)
         #run the evaluate() function to get a dictionary of metrics
@@ -135,7 +139,8 @@ if __name__ == '__main__':
         new_dict = {
             'ID': i,
             'Video IDs': k,
-            'Model Predictions': results,
+            'Model Output': results,
+            'Model Predictions': predictions,
             'Ground Truth': y_true,
             'Precision': evaluation_metrics['precision'],
             'Recall': evaluation_metrics['recall'],
