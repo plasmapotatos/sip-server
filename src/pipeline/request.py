@@ -4,8 +4,11 @@ import os
 import cv2
 from moviepy.editor import VideoFileClip
 import time
+import requests
 import base64
 import av
+import json
+from gradio_client import Client, handle_file
 import numpy as np
 from transformers import VideoLlavaProcessor, VideoLlavaForConditionalGeneration
 from videollava import kill_myself
@@ -103,9 +106,19 @@ class VideoLLaVA:
     def __init__(self, model_name):
         self.model_name = model_name
 
-    def get_response(self, video_path):
+    def get_response(self, video_path, client=None):
+        if not client:
+            client = Client("http://127.0.0.1:7860")
         prompt = "USER: <video>Does the person fall in this video? Begin your response with either the word YES or NO. ASSISTANT:"
-        return kill_myself(prompt, video_path)
+        try:
+            output = client.predict(
+                prompt=prompt,
+                video_path={"video":handle_file(video_path)},
+                api_name="/predict",
+            )
+            return output
+        except requests.exceptions.RequestException as e:
+            print("Error:", e)
     
     def predict(self, directory):
         video_paths = load_vids(directory)
@@ -129,6 +142,6 @@ class VideoLLaVA:
         
 
 if __name__ == '__main__':
-    predictions = VideoLLaVA('Video-LLaVA').predict_custom(directory='./data/Videos', vidnums=[1])
+    predictions = VideoLLaVA('Video-LLaVA').predict_custom(directory='.', vidnums=[0])
     for i in predictions:
         print(i)
