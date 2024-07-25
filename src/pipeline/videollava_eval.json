@@ -699,5 +699,109 @@
         "Precision": 0.1111111111111111,
         "Recall": 0.3333333333333333,
         "F1 Score": 0.16666666666666666
+    },
+    {
+        "ID": 1,
+        "Video IDs": [
+            125,
+            101,
+            252
+        ],
+        "Model Output": [
+            "USER: Does the person fall in this video? Begin your response with either the word YES or NO. ASSISTANT: No",
+            "USER: Does the person fall in this video? Begin your response with either the word YES or NO. ASSISTANT: Yes",
+            "USER: Does the person fall in this video? Begin your response with either the word YES or NO. ASSISTANT: No"
+        ],
+        "Model Predictions": [
+            "N",
+            "Y",
+            "N"
+        ],
+        "Ground Truth": [
+            "N",
+            "Y",
+            "Y"
+        ],
+        "Precision": 0.8333333333333334,
+        "Recall": 0.6666666666666666,
+        "F1 Score": 0.6666666666666666
+    },
+    {
+        "ID": 2,
+        "Video IDs": [
+            117,
+            225,
+            164
+        ],
+        "Model Output": [
+            "USER: Does the person fall in this video? Begin your response with either the word YES or NO. ASSISTANT: No",
+            "USER: Does the person fall in this video? Begin your response with either the word YES or NO. ASSISTANT: No",
+            "USER: Does the person fall in this video? Begin your response with either the word YES or NO. ASSISTANT: No"
+        ],
+        "Model Predictions": [
+            "N",
+            "N",
+            "N"
+        ],
+        "Ground Truth": [
+            "N",
+            "N",
+            "Y"
+        ],
+        "Precision": 0.4444444444444444,
+        "Recall": 0.6666666666666666,
+        "F1 Score": 0.5333333333333333
+    },
+    {
+        "ID": 1,
+        "Video IDs": [
+            44,
+            103,
+            30
+        ],
+        "Model Output": [
+            "USER: Does the person fall in this video? Begin your response with either the word YES or NO. ASSISTANT: No",
+            "USER: Does the person fall in this video? Begin your response with either the word YES or NO. ASSISTANT: No",
+            "USER: Does the person fall in this video? Begin your response with either the word YES or NO. ASSISTANT: No"
+        ],
+        "Model Predictions": [
+            "N",
+            "N",
+            "N"
+        ],
+        "Ground Truth": [
+            "Y",
+            "Y",
+            "Y"
+        ],
+        "Precision": 0.0,
+        "Recall": 0.0,
+        "F1 Score": 0.0
+    },
+    {
+        "ID": 2,
+        "Video IDs": [
+            52,
+            309,
+            146
+        ],
+        "Model Output": [
+            "USER: Does the person fall in this video? Begin your response with either the word YES or NO. ASSISTANT: No",
+            "USER: Does the person fall in this video? Begin your response with either the word YES or NO. ASSISTANT: No",
+            "USER: Does the person fall in this video? Begin your response with either the word YES or NO. ASSISTANT: No"
+        ],
+        "Model Predictions": [
+            "N",
+            "N",
+            "N"
+        ],
+        "Ground Truth": [
+            "Y",
+            "N",
+            "Y"
+        ],
+        "Precision": 0.1111111111111111,
+        "Recall": 0.3333333333333333,
+        "F1 Score": 0.16666666666666666
     }
 ]

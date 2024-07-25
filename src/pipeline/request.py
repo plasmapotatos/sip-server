@@ -108,6 +108,7 @@ class VideoLLaVA:
 
     def get_response(self, video_path, client=None):
         if not client:
+            print("need to make client :(")
             client = Client("http://127.0.0.1:7860")
         prompt = "USER: <video>Does the person fall in this video? Begin your response with either the word YES or NO. ASSISTANT:"
         try:
@@ -135,7 +136,7 @@ class VideoLLaVA:
         predictions = []
 
         for n in vidnums:
-            output = self.get_response(video_path=video_paths[n], client=None)
+            output = self.get_response(video_path=video_paths[n], client=client)
             predictions.append(output)
 
         return predictions
