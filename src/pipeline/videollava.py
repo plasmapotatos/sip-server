@@ -15,7 +15,7 @@ def read_video_pyav(container, indices):
             frames.append(frame)
     return np.stack([x.to_ndarray(format="rgb24") for x in frames])
 
-def kill_myself(prompt, video_path):
+def run_video_llava(prompt, video_path):
     model = VideoLlavaForConditionalGeneration.from_pretrained("LanguageBind/Video-LLaVA-7B-hf")
     processor = VideoLlavaProcessor.from_pretrained("LanguageBind/Video-LLaVA-7B-hf")
 

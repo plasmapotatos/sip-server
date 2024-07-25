@@ -11,7 +11,7 @@ import json
 from gradio_client import Client, handle_file
 import numpy as np
 from transformers import VideoLlavaProcessor, VideoLlavaForConditionalGeneration
-from videollava import kill_myself
+from videollava import run_video_llava
 
 class BaselineModel:
     def __init__(self, model_name, seconds_per_frame=1, custom_max_frames=-1):
@@ -130,12 +130,12 @@ class VideoLLaVA:
 
         return predictions
     
-    def predict_custom(self, directory, vidnums):
+    def predict_custom(self, directory, vidnums, client=None):
         video_paths = load_vids(directory)
         predictions = []
 
         for n in vidnums:
-            output = self.get_response(video_path=video_paths[n])
+            output = self.get_response(video_path=video_paths[n], client=None)
             predictions.append(output)
 
         return predictions

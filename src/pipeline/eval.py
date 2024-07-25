@@ -6,6 +6,7 @@ from request import BaselineModel, VideoLLaVA
 from sklearn.metrics import precision_score, recall_score, f1_score
 from tqdm import tqdm
 import statistics
+from gradio_client import Client
 
 def get_y_true(ground_truth_directory):
     y_true = []
@@ -73,10 +74,10 @@ def evaluate(y_true, results):
         'f1_score': f1
     }
 
-def bane_of_my_existence():
+def random_vid_indices(numofvids):
     vidnums = []
 
-    while(len(vidnums)<30):
+    while(len(vidnums)<numofvids):
         n = random.randint(1, 330)
         if(vidnums.count(n) == 0):
             vidnums.append(n)
@@ -93,12 +94,13 @@ if __name__ == '__main__':
     total_precision = []
     total_recall = []
     total_f1 = []
+    client = Client("http://127.0.0.1:7860")
 
-    for i in range(1, 11):
-        k = bane_of_my_existence()
+    for i in range(1, 3):
+        k = random_vid_indices(3)
 
         print(k)
-        update_evaluation_json_custom(video_directory=vid_directory, output_file=out_file, model=VideoLLaVA('Video-LLaVA'), vidnums=k)
+        update_evaluation_json_custom(video_directory=vid_directory, output_file=out_file, model=VideoLLaVA('Video-LLaVA'), vidnums=k, client=client)
 
         # get results array (res) from json file
         with open(out_file, 'r') as f:
@@ -110,16 +112,16 @@ if __name__ == '__main__':
 
         y_true = get_y_true_custom("./data/Annotation_files", k)
         #run the evaluate() function to get a dictionary of metrics
-        evaluation_metrics = evaluate(y_true, results)
+        evaluation_metrics = evaluate(y_true, predictions)
 
         print("Fall Count: " + str(y_true.count("Y")))
         print("ADL Count: " + str(y_true.count("N")))
         print(y_true)
         # print('\n')
 
-        print("Fall Count: " + str(results.count("Y")))
-        print("ADL Count: " + str(results.count("N")))
-        print(results)
+        print("Fall Count: " + str(predictions.count("Y")))
+        print("ADL Count: " + str(predictions.count("N")))
+        print(predictions)
 
         #print metrics
         print(f"Precision: {evaluation_metrics['precision']:.3f}")
