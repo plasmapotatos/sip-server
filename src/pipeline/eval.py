@@ -1,5 +1,8 @@
 import json
 import random
+import av
+import cv2
+import numpy as np
 from loader import load_answer_files
 from agent import update_evaluation_json, update_evaluation_json_custom
 from request import BaselineModel, VideoLLaVA
@@ -42,7 +45,8 @@ def get_y_true_custom(ground_truth_directory, vid_nums):
     
     # Wrapping the entire file processing loop with tqdm
     for n in vid_nums:
-        with open(y_true_files[n]) as f:
+        # convert 1-indexed to 0-indexed
+        with open(y_true_files[n - 1]) as f:
             s = f.readline()
 
         try:
@@ -84,6 +88,16 @@ def random_vid_indices(numofvids):
 
     return vidnums
 
+def get_frames_llava(video_path):
+    container = av.open(video_path)
+    video = cv2.VideoCapture(video_path)
+
+    total_frames = container.streams.video[0].frames
+    indices = np.arange(0, total_frames, total_frames / 8).astype(int)
+    fps = video.get(cv2.CAP_PROP_FPS)
+    times = indices/fps
+
+    return indices.tolist(), times.tolist()
 
 if __name__ == '__main__':
     vid_directory = './data/Videos'
@@ -96,8 +110,15 @@ if __name__ == '__main__':
     total_f1 = []
     client = Client("http://127.0.0.1:7860")
 
-    for i in range(1, 3):
-        k = random_vid_indices(3)
+    failure_cases = []
+
+    total_true_pos = 0
+    total_true_neg = 0
+    total_false_pos = 0
+    total_false_neg = 0
+
+    for i in tqdm(range(1, 11)):
+        k = random_vid_indices(30)
 
         print(k)
         update_evaluation_json_custom(video_directory=vid_directory, output_file=out_file, model=VideoLLaVA('Video-LLaVA'), vidnums=k, client=client)
@@ -108,20 +129,21 @@ if __name__ == '__main__':
         
         predictions = []
         for r in results:
-            predictions.append(r.split('ASSISTANT: ')[1][:1])
+            r = r.split('ASSISTANT: ')[1]
+            if(r[:1] == 'Y' or r[:1] == 'N'):
+                predictions.append(r[:1])
+                continue
+
+            if "has fallen" in r or "have fallen" in r:
+                predictions.append("Y")
+            elif "Activity of Daily Living" in r or "Activities of Daily Living" in r or "activity of daily living" in r or "activities of daily living" in r or "not fall" in r:
+                predictions.append("N")
+            else:
+                predictions.append("Y")
 
         y_true = get_y_true_custom("./data/Annotation_files", k)
         #run the evaluate() function to get a dictionary of metrics
         evaluation_metrics = evaluate(y_true, predictions)
-
-        print("Fall Count: " + str(y_true.count("Y")))
-        print("ADL Count: " + str(y_true.count("N")))
-        print(y_true)
-        # print('\n')
-
-        print("Fall Count: " + str(predictions.count("Y")))
-        print("ADL Count: " + str(predictions.count("N")))
-        print(predictions)
 
         #print metrics
         print(f"Precision: {evaluation_metrics['precision']:.3f}")
@@ -137,6 +159,44 @@ if __name__ == '__main__':
         except Exception as e:
             print(e)
             data = []
+
+        false_pos = 0
+        true_pos = 0
+        false_neg = 0
+        true_neg = 0
+
+        for j in range(len(k)):
+            if(predictions[j] == y_true[j]):
+                if(predictions[j] == 'Y'): 
+                    true_pos += 1
+                else:
+                    true_neg += 1
+                continue
+            
+            if(y_true[j] == 'N'):
+                false_pos += 1
+            else:
+                false_neg += 1
+            
+            video_path = "./data/Videos/video_(" + str(k[j]) + ").avi"
+            seconds_per_frame = 1
+
+            frames, frametimes = get_frames_llava(video_path)
+            
+            faildict = {
+                "batch_id": i,
+                "ground_truth": y_true[j],
+                "model_output": results[j],
+                "model_prediction": predictions[j],
+                "false_positive": y_true[j] == 'N',
+                "false_negative": y_true[j] == 'N',
+                "video_number": k[j],
+                "video_path":video_path,
+                "frame_numbers": frames,
+                "time_of_frames(seconds)": frametimes
+            }
+
+            failure_cases.append(faildict)
         
         new_dict = {
             'ID': i,
@@ -144,6 +204,10 @@ if __name__ == '__main__':
             'Model Output': results,
             'Model Predictions': predictions,
             'Ground Truth': y_true,
+            'True Positive Count': true_pos,
+            'True Negative Count': true_neg,
+            'False Positive Count': false_pos,
+            'False Negative Count': false_neg,
             'Precision': evaluation_metrics['precision'],
             'Recall': evaluation_metrics['recall'],
             'F1 Score': evaluation_metrics['f1_score']
@@ -152,6 +216,11 @@ if __name__ == '__main__':
 
         with open(separate_file, 'w') as outfile:
             json.dump(data, outfile, indent=4)
+
+        total_true_neg += true_neg
+        total_true_pos += true_pos
+        total_false_pos += false_pos
+        total_false_neg += false_neg
     
     with open(separate_file, 'r') as file:
         data = json.load(file)
@@ -161,9 +230,9 @@ if __name__ == '__main__':
     total_f1 = []
 
     for dict1 in data:
-        total_precision.append(dict1["Precision"])
-        total_recall.append(dict1["Recall"])
-        total_f1.append(dict1["F1 Score"])
+        total_precision.append(dict1['Precision'])
+        total_recall.append(dict1['Recall'])
+        total_f1.append(dict1['F1 Score'])
 
     print(total_precision)
     print(total_recall)
@@ -183,6 +252,10 @@ if __name__ == '__main__':
 
     new_dict = {
         'id': 'Final Evaluation',
+        'Total True Positive': total_true_pos,
+        'Total True Negative': total_true_neg,
+        'Total False Positive': total_false_pos,
+        'Total False Negative': total_false_neg,
         'Precision (Mean)': statistics.mean(total_precision),
         'Precision (Standard Deviation)': statistics.stdev(total_precision),
         'Recall (Mean)': statistics.mean(total_recall),
@@ -190,6 +263,13 @@ if __name__ == '__main__':
         'F1 Score (Mean)': statistics.mean(total_f1),
         'F1 Score (Standard Deviation)': statistics.stdev(total_f1)
     }
+    data.append(new_dict)
+
+    new_dict = {
+        'id': 'Failure Cases',
+        'failure_cases': failure_cases
+    }
+
     data.append(new_dict)
 
     with open(separate_file, 'w') as outfile:

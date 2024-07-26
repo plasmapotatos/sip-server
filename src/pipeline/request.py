@@ -97,7 +97,7 @@ class BaselineModel:
         predictions = []
 
         for n in vidnums:
-            output = self.get_response(vid_path=video_paths[n])
+            output = self.get_response(vid_path=video_paths[n - 1])
             predictions.append(output)
 
         return predictions
@@ -110,7 +110,7 @@ class VideoLLaVA:
         if not client:
             print("need to make client :(")
             client = Client("http://127.0.0.1:7860")
-        prompt = "USER: <video>Does the person fall in this video? Begin your response with either the word YES or NO. ASSISTANT:"
+        prompt = "USER: <video>The person in the video is either performing an Activity of Daily Life or falls in the video. Determine whether or not the person in the chronological series of images, which were extracted from a video, has fallen. Explain why you think the person has or has not fallen. ASSISTANT:"
         try:
             output = client.predict(
                 prompt=prompt,
@@ -136,7 +136,7 @@ class VideoLLaVA:
         predictions = []
 
         for n in vidnums:
-            output = self.get_response(video_path=video_paths[n], client=client)
+            output = self.get_response(video_path=video_paths[n - 1], client=client)
             predictions.append(output)
 
         return predictions
