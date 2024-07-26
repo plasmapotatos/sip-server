@@ -1,17 +1,17 @@
 import json
 from loader import load_vids
-from request import BaselineModel
+from request import BaselineModel, VideoLLaVA
 
 def run_validation(vid_directory, model):
     results = model.predict(directory=vid_directory)
     return results
 
-def run_validation_custom(vid_directory, model, vidnums):
-    results = model.predict_custom(directory=vid_directory, vidnums=vidnums)
+def run_validation_custom(vid_directory, model, vidnums, client=None):
+    results = model.predict_custom(directory=vid_directory, vidnums=vidnums, client=client)
     return results
 
 
-def update_evaluation_json(video_directory, output_file, model = BaselineModel('gpt-4o')):
+def update_evaluation_json(video_directory, output_file, model):
     results = run_validation(video_directory, model)
 
     # adds data to json file in the form of a json array
@@ -20,8 +20,8 @@ def update_evaluation_json(video_directory, output_file, model = BaselineModel('
     with open(output_file, 'w') as outfile:
         json.dump(results, outfile, indent=4)
 
-def update_evaluation_json_custom(video_directory, output_file, vidnums, model = BaselineModel('gpt-4o')):
-    results = run_validation_custom(video_directory, model, vidnums)
+def update_evaluation_json_custom(video_directory, output_file, vidnums, model, client=None):
+    results = run_validation_custom(video_directory, model, vidnums, client=client)
 
     # adds data to json file in the form of a json array
     jarr = json.dumps(results)

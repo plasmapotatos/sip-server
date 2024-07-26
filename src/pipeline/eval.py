@@ -3,10 +3,11 @@ import random
 import cv2
 from loader import load_answer_files
 from agent import update_evaluation_json, update_evaluation_json_custom
-from request import BaselineModel
+from request import BaselineModel, VideoLLaVA
 from sklearn.metrics import precision_score, recall_score, f1_score
 from tqdm import tqdm
 import statistics
+from gradio_client import Client
 
 def get_y_true(ground_truth_directory):
     y_true = []
@@ -69,8 +70,10 @@ def evaluate(y_true, results):
     }
 
 def random_vid_indices(numofvids):
+def random_vid_indices(numofvids):
     vidnums = []
 
+    while(len(vidnums)<numofvids):
     while(len(vidnums)<numofvids):
         n = random.randint(1, 330)
         if(vidnums.count(n) == 0):
@@ -115,6 +118,7 @@ if __name__ == '__main__':
     total_precision = []
     total_recall = []
     total_f1 = []
+    client = Client("http://127.0.0.1:7860")
 
     failure_cases = []
 
@@ -138,6 +142,10 @@ if __name__ == '__main__':
         # get results array (res) from json file
         with open(out_file, 'r') as f:
             results = json.load(f)
+        
+        predictions = []
+        for r in results:
+            predictions.append(r.split('ASSISTANT: ')[1][:1])
 
         predictions = []
 
@@ -204,7 +212,8 @@ if __name__ == '__main__':
         new_dict = {
             'ID': i,
             'Video IDs': k,
-            'Model Predictions': results,
+            'Model Output': results,
+            'Model Predictions': predictions,
             'Ground Truth': y_true,
             'True Positive Count': true_pos,
             'True Negative Count': true_neg,

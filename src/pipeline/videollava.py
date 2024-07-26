@@ -15,26 +15,19 @@ def read_video_pyav(container, indices):
             frames.append(frame)
     return np.stack([x.to_ndarray(format="rgb24") for x in frames])
 
+def run_video_llava(prompt, video_path):
+    model = VideoLlavaForConditionalGeneration.from_pretrained("LanguageBind/Video-LLaVA-7B-hf")
+    processor = VideoLlavaProcessor.from_pretrained("LanguageBind/Video-LLaVA-7B-hf")
 
-model = VideoLlavaForConditionalGeneration.from_pretrained("LanguageBind/Video-LLaVA-7B-hf")
-processor = VideoLlavaProcessor.from_pretrained("LanguageBind/Video-LLaVA-7B-hf")
+    container = av.open(video_path)
 
-prompt = "USER: <video>Does the person fall in this video? ASSISTANT:"
-video_path = "./data/Videos/video_(1).avi"
-container = av.open(video_path)
+    # sample uniformly 8 frames from the video
+    total_frames = container.streams.video[0].frames
+    indices = np.arange(0, total_frames, total_frames / 8).astype(int)
+    clip = read_video_pyav(container, indices)
 
-if(torch.cuda.is_available()):
-    device = torch.device("cuda")
-else:
-    device = torch.device("cpu")
+    inputs = processor(text=prompt, videos=clip, return_tensors="pt")
 
-# sample uniformly 8 frames from the video
-total_frames = container.streams.video[0].frames3
-indices = np.arange(0, total_frames, total_frames / 8).astype(int)
-clip = read_video_pyav(container, indices)
-
-inputs = processor(text=prompt, videos=clip, return_tensors="pt")
-
-# Generate
-generate_ids = model.generate(**inputs, max_length=80)
-print(processor.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0])
+    # Generate
+    generate_ids = model.generate(**inputs, max_length=80)
+    return processor.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]

@@ -4,10 +4,14 @@ import os
 import cv2
 from moviepy.editor import VideoFileClip
 import time
+import requests
 import base64
 import av
+import json
+from gradio_client import Client, handle_file
 import numpy as np
 from transformers import VideoLlavaProcessor, VideoLlavaForConditionalGeneration
+from videollava import run_video_llava
 
 class BaselineModel:
     def __init__(self, model_name, seconds_per_frame=1):
@@ -94,14 +98,47 @@ class BaselineModel:
 
         return predictions
 
-class VideoLLaVa:
-    def __init__(self, model_name, seconds_per_frame=1, custom_max_frames=-1):
+class VideoLLaVA:
+    def __init__(self, model_name):
         self.model_name = model_name
-        self.MODEL = VideoLlavaForConditionalGeneration.from_pretrained("LanguageBind/Video-LLaVA-7B-hf")
-        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+    def get_response(self, video_path, client=None):
+        if not client:
+            print("need to make client :(")
+            client = Client("http://127.0.0.1:7860")
+        prompt = "USER: <video>Does the person fall in this video? Begin your response with either the word YES or NO. ASSISTANT:"
+        try:
+            output = client.predict(
+                prompt=prompt,
+                video_path={"video":handle_file(video_path)},
+                api_name="/predict",
+            )
+            return output
+        except requests.exceptions.RequestException as e:
+            print("Error:", e)
+    
+    def predict(self, directory):
+        video_paths = load_vids(directory)
+        predictions = []
+
+        for video_path in video_paths:
+            output = self.get_response(video_path=video_path)
+            predictions.append(output)
+
+        return predictions
+    
+    def predict_custom(self, directory, vidnums, client=None):
+        video_paths = load_vids(directory)
+        predictions = []
+
+        for n in vidnums:
+            output = self.get_response(video_path=video_paths[n], client=client)
+            predictions.append(output)
+
+        return predictions
         
 
 if __name__ == '__main__':
-    predictions = BaselineModel('gpt-4o').predict(directory='./src/pipeline/testing')
+    predictions = VideoLLaVA('Video-LLaVA').predict_custom(directory='.', vidnums=[0])
     for i in predictions:
         print(i)
