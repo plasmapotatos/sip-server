@@ -70,10 +70,8 @@ def evaluate(y_true, results):
     }
 
 def random_vid_indices(numofvids):
-def random_vid_indices(numofvids):
     vidnums = []
 
-    while(len(vidnums)<numofvids):
     while(len(vidnums)<numofvids):
         n = random.randint(1, 330)
         if(vidnums.count(n) == 0):
