@@ -13,8 +13,6 @@ from gradio_client import Client
 
 def get_y_true(ground_truth_directory):
     y_true = []
-    firstlines = []
-
     y_true_files = load_answer_files(ground_truth_directory)
 
     # Wrapping the entire file processing loop with tqdm
@@ -23,7 +21,6 @@ def get_y_true(ground_truth_directory):
             s = f.readline()
 
         try:
-            firstlines.append(s)
             if(s == 'Fall\n'):
                 y_true.append('Y')
             elif(s == 'ADL\n' or int(s) == 0):
@@ -39,8 +36,6 @@ def get_y_true(ground_truth_directory):
 
 def get_y_true_custom(ground_truth_directory, vid_nums):
     y_true = []
-    firstlines = []
-
     y_true_files = load_answer_files(ground_truth_directory)
     
     # Wrapping the entire file processing loop with tqdm
@@ -50,7 +45,6 @@ def get_y_true_custom(ground_truth_directory, vid_nums):
             s = f.readline()
 
         try:
-            firstlines.append(s)
             if(s == 'Fall\n'):
                 y_true.append('Y')
             elif(s == 'ADL\n' or int(s) == 0):
@@ -98,12 +92,39 @@ def get_frames_llava(video_path):
     times = indices/fps
 
     return indices.tolist(), times.tolist()
+def get_frames(video_path, seconds_per_frame):
+    frames = []
+    frame_times = []
+
+    video = cv2.VideoCapture(video_path)
+    total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    fps = video.get(cv2.CAP_PROP_FPS)
+    frames_to_skip = int(fps * seconds_per_frame)
+    curr_frame=0
+    curr_time=0.0
+
+    # Loop through the video and extract frames at specified sampling rate
+    while curr_frame < total_frames - 1:
+        video.set(cv2.CAP_PROP_POS_FRAMES, curr_frame)
+        success, frame = video.read()
+        if not success:
+            break
+        frames.append(curr_frame)
+        frame_times.append(curr_time)
+        curr_frame += frames_to_skip
+        curr_time += seconds_per_frame
+    video.release()
+    
+    return frames, frame_times
 
 if __name__ == '__main__':
     vid_directory = './data/Videos'
     out_file = './src/pipeline/eval_array.json'
     grnd_truth_directory="./data/Annotation_files"
-    separate_file = './src/pipeline/videollava_eval.json'
+    separate_file = './src/pipeline/all_eval_results.json'
+
+    seconds_per_frame = 1 # for GPT-4o
 
     total_precision = []
     total_recall = []
@@ -121,8 +142,14 @@ if __name__ == '__main__':
         k = random_vid_indices(30)
 
         print(k)
-        update_evaluation_json_custom(video_directory=vid_directory, output_file=out_file, model=VideoLLaVA('Video-LLaVA'), vidnums=k, client=client)
-
+        while (True):
+            try: 
+                update_evaluation_json_custom(video_directory=vid_directory, output_file=out_file, model=BaselineModel('gpt-4o', seconds_per_frame=seconds_per_frame), vidnums=k)
+                break
+            except Exception as e:
+                print("Error!", e)
+                continue
+        
         # get results array (res) from json file
         with open(out_file, 'r') as f:
             results = json.load(f)
@@ -140,6 +167,11 @@ if __name__ == '__main__':
                 predictions.append("N")
             else:
                 predictions.append("Y")
+
+        predictions = []
+
+        for n in results:
+            predictions.append(n[:1])
 
         y_true = get_y_true_custom("./data/Annotation_files", k)
         #run the evaluate() function to get a dictionary of metrics
@@ -216,7 +248,6 @@ if __name__ == '__main__':
 
         with open(separate_file, 'w') as outfile:
             json.dump(data, outfile, indent=4)
-
         total_true_neg += true_neg
         total_true_pos += true_pos
         total_false_pos += false_pos

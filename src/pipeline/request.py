@@ -14,14 +14,13 @@ from transformers import VideoLlavaProcessor, VideoLlavaForConditionalGeneration
 from videollava import run_video_llava
 
 class BaselineModel:
-    def __init__(self, model_name, seconds_per_frame=1, custom_max_frames=-1):
+    def __init__(self, model_name, seconds_per_frame=1):
         self.model_name = model_name
         self.MODEL = "gpt-4o"
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
         
         # Extract 1 frame per second. You can adjust the `seconds_per_frame` parameter to change the sampling rate
         self.seconds_per_frame = seconds_per_frame
-        self.custom_total_frames = custom_max_frames
     
     #converts video into a list of images (base64Frames) and returns an audio_path
     def process_video(self, video_path):
@@ -31,9 +30,6 @@ class BaselineModel:
 
         video = cv2.VideoCapture(video_path)
         total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
-
-        if(self.custom_total_frames != -1):
-            total_frames = self.custom_total_frames
 
         fps = video.get(cv2.CAP_PROP_FPS)
         frames_to_skip = int(fps * self.seconds_per_frame)
@@ -68,7 +64,7 @@ class BaselineModel:
         response = self.client.chat.completions.create(
             model=self.MODEL,
             messages=[
-            {"role": "system", "content": "You are determining whether or not the person in the chronological series of images, which were extracted from a video, has fallen. Respond with just one capital letter and nothing else: either Y or N."},
+            {"role": "system", "content": "You are determining whether or not the person in the chronological series of images, which were extracted from a video, has fallen. Begin your response with just one capital letter: either Y or N. Finish your response with an explanation of why you believe that the person has fallen."},
             {"role": "user", "content": [
                 "These are the frames from the video.",
                 *map(lambda x: {"type": "image_url", 
