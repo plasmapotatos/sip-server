@@ -139,7 +139,7 @@ class BaselineModel:
         return predictions
 
 class VideoLLaVA:
-    def __init__(self, model_name):
+    def __init__(self, model_name="Video-LLaVA"):
         self.model_name = model_name
 
     def get_response(self, video_path, client=None):
@@ -178,9 +178,9 @@ class VideoLLaVA:
         return predictions
         
 
-model = BaselineModel()
+# model = BaselineModel()
 
-ans = model.eval_consistency("./data/Videos/video_(4).avi", [0, 25, 50, 75, 100, 125, 150, 175, 200], "The person has not fallen. They appear to have intentionally laid down on the mattress placed on the floor. The sequence of movements suggests a deliberate action rather than an accidental fall.")
-print(ans)
+# ans = model.eval_consistency("./data/Videos/video_(4).avi", [0, 25, 50, 75, 100, 125, 150, 175, 200], "The person has not fallen. They appear to have intentionally laid down on the mattress placed on the floor. The sequence of movements suggests a deliberate action rather than an accidental fall.")
+# print(ans)
 
-print("Confidence score" + re.search("[01][.][0-9]+", ans).group())
+# print("Confidence score" + re.search("[01][.][0-9]+", ans).group())

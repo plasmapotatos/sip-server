@@ -7,7 +7,11 @@ def run_validation(vid_directory, model):
     return results
 
 def run_validation_custom(vid_directory, model, vidnums, client=None):
-    results = model.predict_custom(directory=vid_directory, vidnums=vidnums, client=client)
+    results = []
+    if(isinstance(model, BaselineModel)):
+        results = model.predict_custom(directory=vid_directory, vidnums=vidnums)
+    elif(isinstance(model, VideoLLaVA)):
+        results = model.predict_custom(directory=vid_directory, vidnums=vidnums, client=client)
     return results
 
 

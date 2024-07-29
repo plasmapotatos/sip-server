@@ -93,6 +93,7 @@ def get_frames_llava(video_path):
     times = indices/fps
 
     return indices.tolist(), times.tolist()
+
 def get_frames(video_path, seconds_per_frame):
     frames = []
     frame_times = []
@@ -128,6 +129,8 @@ if __name__ == '__main__':
 
     seconds_per_frame = 1 # for GPT-4o
 
+    model = BaselineModel('gpt-4o', seconds_per_frame=seconds_per_frame)
+
     total_precision = []
     total_recall = []
     total_f1 = []
@@ -135,6 +138,8 @@ if __name__ == '__main__':
 
     failure_cases = []
     conf_results = []
+    conf_list = []
+    low_conf_list = []
 
     total_true_pos = 0
     total_true_neg = 0
@@ -147,7 +152,7 @@ if __name__ == '__main__':
         print(k)
         while (True):
             try: 
-                update_evaluation_json_custom(video_directory=vid_directory, output_file=out_file, model=BaselineModel('gpt-4o', seconds_per_frame=seconds_per_frame), vidnums=k)
+                update_evaluation_json_custom(video_directory=vid_directory, output_file=out_file, model=model, vidnums=k)
                 break
             except Exception as e:
                 print("Error!", e)
@@ -159,7 +164,8 @@ if __name__ == '__main__':
         
         predictions = []
         for r in results:
-            r = r.split('ASSISTANT: ')[1]
+            if(isinstance(model, VideoLLaVA)):
+                r = r.split('ASSISTANT: ')[1]
             if(r[:1] == 'Y' or r[:1] == 'N'):
                 predictions.append(r[:1])
                 continue
@@ -201,19 +207,33 @@ if __name__ == '__main__':
         true_neg = 0
 
         for j in range(len(k)):
-            frames, frametimes = get_frames(video_path)
-            
-            ans = BaselineModel().eval_consistency(video_path, frames, results[j])
+            video_path = "./data/Videos/video_(" + str(k[j]) + ").avi"
+
+            frames, frametimes = get_frames(video_path, seconds_per_frame)
+            ans = ''
+            while (True):
+                try: 
+                    ans = BaselineModel().eval_consistency(video_path, frames, results[j][3:])
+                    break
+                except Exception as e:
+                    print("Error!", e)
+                    continue
+
+            conf = float(re.search("[01][.][0-9]+", ans).group())
             conf_dict = {
                 "batch_id": i,
                 "ground_truth": y_true[j],
                 "model_output": results[j],
                 "model_prediction": predictions[j],
-                "confidence_score": re.search("[01][.][0-9]+", ans).group(),
+                "confidence_score": conf,
                 "confidence_score_explanation": ans
             }
 
+            conf_list.append(conf)
             conf_results.append(conf_dict)
+
+            if(conf < 0.5):
+                low_conf_list.append(conf_dict)
             
             if(predictions[j] == y_true[j]):
                 if(predictions[j] == 'Y'): 
@@ -227,7 +247,6 @@ if __name__ == '__main__':
             else:
                 false_neg += 1
             
-            video_path = "./data/Videos/video_(" + str(k[j]) + ").avi"
             seconds_per_frame = 1
 
             faildict = {
@@ -261,8 +280,6 @@ if __name__ == '__main__':
         }
         data.append(new_dict)
 
-        
-
         with open(separate_file, 'w') as outfile:
             json.dump(data, outfile, indent=4)
         total_true_neg += true_neg
@@ -282,21 +299,15 @@ if __name__ == '__main__':
         total_recall.append(dict1['Recall'])
         total_f1.append(dict1['F1 Score'])
 
-    print(total_precision)
-    print(total_recall)
-    print(total_f1)
-
-    print(statistics.mean(total_precision))
-    print(statistics.stdev(total_precision))
-
-    print(statistics.mean(total_recall))
-    print(statistics.stdev(total_recall))
-
-    print(statistics.mean(total_f1))
-    print(statistics.stdev(total_f1))
-
     with open(separate_file, 'r') as file:
         data = json.load(file)
+    
+    new_dict = {
+        'id': 'Failure Cases',
+        'failure_cases': failure_cases
+    }
+
+    data.append(new_dict)
 
     new_dict = {
         'id': 'Final Evaluation',
@@ -313,15 +324,26 @@ if __name__ == '__main__':
     }
     data.append(new_dict)
 
-    new_dict = {
-        'id': 'Failure Cases',
-        'failure_cases': failure_cases
-    }
-
-    data.append(new_dict)
-
     with open(separate_file, 'w') as outfile:
         json.dump(data, outfile, indent=4)
+
+    new_dict = {
+        'id': 'Failure Cases',
+        'failure_cases': low_conf_list
+    }
+    conf_results.append(new_dict)
     
+    new_dict = {
+        'ID': 'Final Evaluation',
+        'Precision (Mean)': statistics.mean(conf_list),
+        'Precision (Standard Deviation)': statistics.stdev(conf_list),
+        'Recall (Mean)': statistics.mean(conf_list),
+        'Recall (Standard Deviation)': statistics.stdev(conf_list),
+        'F1 Score (Mean)': statistics.mean(conf_list),
+        'F1 Score (Standard Deviation)': statistics.stdev(conf_list)
+    }
+
+    conf_results.append(new_dict)
+
     with open(conf_file, 'w') as outfile:
         json.dump(conf_results, outfile, indent=4)
