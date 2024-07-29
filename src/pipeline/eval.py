@@ -2,6 +2,7 @@ import json
 import random
 import av
 import cv2
+import re
 import numpy as np
 from loader import load_answer_files
 from agent import update_evaluation_json, update_evaluation_json_custom
@@ -123,6 +124,7 @@ if __name__ == '__main__':
     out_file = './src/pipeline/eval_array.json'
     grnd_truth_directory="./data/Annotation_files"
     separate_file = './src/pipeline/all_eval_results.json'
+    conf_file = './src/pipeline/confidence_results.json'
 
     seconds_per_frame = 1 # for GPT-4o
 
@@ -132,6 +134,7 @@ if __name__ == '__main__':
     client = Client("http://127.0.0.1:7860")
 
     failure_cases = []
+    conf_results = []
 
     total_true_pos = 0
     total_true_neg = 0
@@ -198,6 +201,20 @@ if __name__ == '__main__':
         true_neg = 0
 
         for j in range(len(k)):
+            frames, frametimes = get_frames(video_path)
+            
+            ans = BaselineModel().eval_consistency(video_path, frames, results[j])
+            conf_dict = {
+                "batch_id": i,
+                "ground_truth": y_true[j],
+                "model_output": results[j],
+                "model_prediction": predictions[j],
+                "confidence_score": re.search("[01][.][0-9]+", ans).group(),
+                "confidence_score_explanation": ans
+            }
+
+            conf_results.append(conf_dict)
+            
             if(predictions[j] == y_true[j]):
                 if(predictions[j] == 'Y'): 
                     true_pos += 1
@@ -213,8 +230,6 @@ if __name__ == '__main__':
             video_path = "./data/Videos/video_(" + str(k[j]) + ").avi"
             seconds_per_frame = 1
 
-            frames, frametimes = get_frames_llava(video_path)
-            
             faildict = {
                 "batch_id": i,
                 "ground_truth": y_true[j],
@@ -229,7 +244,7 @@ if __name__ == '__main__':
             }
 
             failure_cases.append(faildict)
-        
+
         new_dict = {
             'ID': i,
             'Video IDs': k,
@@ -245,6 +260,8 @@ if __name__ == '__main__':
             'F1 Score': evaluation_metrics['f1_score']
         }
         data.append(new_dict)
+
+        
 
         with open(separate_file, 'w') as outfile:
             json.dump(data, outfile, indent=4)
@@ -305,3 +322,6 @@ if __name__ == '__main__':
 
     with open(separate_file, 'w') as outfile:
         json.dump(data, outfile, indent=4)
+    
+    with open(conf_file, 'w') as outfile:
+        json.dump(conf_results, outfile, indent=4)
