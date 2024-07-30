@@ -11,6 +11,22 @@ from utils.prompts import ACTION_PLANNING_PROMPT
 MODEL = "gpt-4o"
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
+def get_transcription(audio_path):
+    # Get the transcription of the audio
+    if audio_path is not None:
+        try:
+            transcription = client.audio.transcriptions.create(
+                model="whisper-1",
+                file=open(audio_path, "rb"),
+            ).text
+        except Exception as e:
+            print(f"Error: {e}")
+            transcription = ""
+    else:
+        transcription = ""
+        
+    return transcription
+
 def process_video(video_path, seconds_per_frame=2, use_all_frames=False):
     base64Frames = []
     base_video_path, _ = os.path.splitext(video_path)
@@ -43,7 +59,8 @@ def process_video(video_path, seconds_per_frame=2, use_all_frames=False):
         clip.audio.write_audiofile(audio_path, bitrate="32k")
         clip.audio.close()
         clip.close()
-    except:
+    except Exception as e:
+        print(f"Error: {e}")
         audio_path = None
 
     #print(f"Extracted {len(base64Frames)} frames")
@@ -76,6 +93,19 @@ def prompt_gpt4o_with_frames_and_audio(base64Frames, user_prompt, transcription)
     
     return output
 
+def prompt_gpt4o(user_prompt):
+    # Send the user prompt to GPT-4O
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+        {"role": "user", "content": user_prompt
+        }
+        ],
+        temperature=0,
+    )
+
+    return response.choices[0].message.content
+
 def process_and_prompt(video_path, prompt, seconds_per_frame=2, use_all_frames=False):
     # Process the video to get frames and audio
     base64Frames, audio_path = process_video(video_path, seconds_per_frame, use_all_frames=use_all_frames)
@@ -101,5 +131,5 @@ if __name__ == "__main__":
     video_path = 'video_1.avi'  # Replace with your video path
     user_prompt = ACTION_PLANNING_PROMPT
 
-    response = process_and_prompt(video_path, user_prompt, seconds_per_frame=0.2)
+    response = prompt_gpt4o(user_prompt)
     print(response)

@@ -3,16 +3,16 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import messaging
 from src.actions import speak, call, push_notification
+from src.ffmpeg_server import chat_with_client, build_conversation
+from utils.prompts import CONVERSATION_PROMPT
 
-with open("output/gpt4o_output_20240716-161342.txt", "r") as output_file:
-    response = output_file.read()
-function_calls = re.findall(r'(\w+)\((.*?)\)', response)
-token = 'fFyqfZJWSUuNQS2cA1ec-A:APA91bGgD67k1KRb5pvrS5ViX28ufl_lRzz8BjKqYqbk7iHnmknyboM6kB0gZC_pRbtb1kvaNdG6zmX9phfJCloRqD4mIOuZwwyvTyms9KdO0naZky-6ebpJ4SuVgMkaaSzZwcTrjgmy'
+agent = []
+client = []
 
-cred = credentials.Certificate('fir-pushnotifications-17c1a-firebase-adminsdk-2gn9p-192b0078c5.json')
-firebase_admin.initialize_app(cred)
+conversation = build_conversation(agent, client)
+prompt = CONVERSATION_PROMPT.format(conversation=conversation)
+#print(prompt)
 
-print(function_calls)
-for func_name, args in function_calls:
-    new_args = f"{args}, '{token}'"  # Add the token to the arguments
-    exec(f"{func_name}({new_args})")
+response = chat_with_client(agent, client)
+
+#print(response)
