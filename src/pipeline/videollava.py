@@ -32,4 +32,4 @@ def run_video_llava(prompt, video_path):
     generate_ids = model.generate(**inputs, max_length=300)
     return processor.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
 
-# print(run_video_llava("USER: <video>The person in the video either performs an Activity of Daily Life or falls in the video. Determine whether or not the person in the chronological series of images, which were extracted from a video, has fallen. Explain why you think the person has or has not fallen. ASSISTANT:", './data/Videos/video_(1).avi'))
+print(run_video_llava("USER: <video>The person in the video either performs an Activity of Daily Life or falls in the video. Determine whether or not the person in the chronological series of images, which were extracted from a video, has fallen. Explain why you think the person has or has not fallen. ASSISTANT:", './data/Videos/video_(1).avi'))
