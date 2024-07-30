@@ -21,9 +21,9 @@ message = messaging.MulticastMessage(
 message.data = {
     'action': 'speak',
     # 'desiredVolume': '5',
-    'phoneNumber': "6692524341",
-    'message': 'hello',
-    'duration': '1000',
+    # 'phoneNumber': "1231231233",
+    'message': 'june the month you are very freaky',
+    'duration': '2000',
 }
 # message = messaging.Message(
 #     data = {
