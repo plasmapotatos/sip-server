@@ -19,14 +19,6 @@ src/pipeline/eval.py
 src/pipeline/loader.py
 src/pipeline/request.py
 src/pipeline/testing/__init__.py
-src/sip-server/__init__.py
-src/sip-server/setup.py
-src/sip-server/src/__init__.py
-src/sip-server/src/ffmpeg_server.py
-src/sip-server/src/server.py
-src/sip-server/utils/__init__.py
-src/sip-server/utils/prompts.py
-src/sip-server/utils/request_utils.py
 test/test.py
 utils/__init__.py
 utils/message.py
