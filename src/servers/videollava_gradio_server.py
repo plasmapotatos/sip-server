@@ -39,7 +39,7 @@ def prompt_videollava(prompt, video_path):
     inputs = processor(text=prompt, videos=clip, return_tensors="pt").to(device)
 
     # Generate
-    generate_ids = model.generate(**inputs, max_length=80)
+    generate_ids = model.generate(**inputs, max_length=300)
     return processor.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
 
 

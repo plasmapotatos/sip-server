@@ -1,11 +1,13 @@
 import cv2
 from moviepy.editor import VideoFileClip
 import base64
+import numpy as np
 from openai import OpenAI 
 
 import os
 import openai
-from utils.prompts import ACTION_PLANNING_PROMPT
+import requests
+from utils.prompts import ACTION_PLANNING_PROMPT, SAFETY_SCORE_PROMPT
 
 # Set your OpenAI API key
 MODEL = "gpt-4o"
@@ -106,6 +108,27 @@ def prompt_gpt4o(user_prompt):
 
     return response.choices[0].message.content
 
+def prompt_gpt4o_with_image(user_prompt, image):
+    #image in cv2 format
+    _, buffer = cv2.imencode(".jpg", image)
+    base64Image = base64.b64encode(buffer).decode("utf-8")
+
+    # Send the user prompt and image to GPT-4O
+    response = client.chat.completions.create(
+    model=MODEL,
+    messages=[
+        {"role": "user", "content": [
+            {"type": "text", "text": user_prompt},
+            {"type": "image_url", "image_url": {
+                "url": f"data:image/png;base64,{base64Image}"}
+            }
+        ]}
+    ],
+    temperature=0.0,
+)
+
+    return response.choices[0].message.content
+
 def process_and_prompt(video_path, prompt, seconds_per_frame=2, use_all_frames=False):
     # Process the video to get frames and audio
     base64Frames, audio_path = process_video(video_path, seconds_per_frame, use_all_frames=use_all_frames)
@@ -127,9 +150,38 @@ def process_and_prompt(video_path, prompt, seconds_per_frame=2, use_all_frames=F
 
     return response
 
-if __name__ == "__main__":
-    video_path = 'video_1.avi'  # Replace with your video path
-    user_prompt = ACTION_PLANNING_PROMPT
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')
 
-    response = prompt_gpt4o(user_prompt)
+def prompt_sam(image_str):
+    # URL of the endpoint
+    url = 'http://127.0.0.1:5000/api/inference'
+    # Send the image and prompt to the SAM endpoint
+    data = {
+        'image': image_str,
+        'annotation_mode': ['Mark', 'Polygon'],
+        'mask_alpha': 0.05
+    }
+    response = requests.post(url, json=data)
+    response_data = response.json()
+
+    result_image_str = response_data['result_image']
+    result_image_data = base64.b64decode(result_image_str)
+    
+    # Convert base64 to image
+    nparr = np.frombuffer(result_image_data, np.uint8)
+    result_image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+    return result_image
+
+if __name__ == "__main__":
+    image_path = 'room.png'
+    image_str = encode_image(image_path)
+    image = prompt_sam(image_str)
+
+    cv2.imwrite('result_image_from_video.jpg', image)
+
+    response = prompt_gpt4o_with_image(SAFETY_SCORE_PROMPT, image)
+
     print(response)
