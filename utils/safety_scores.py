@@ -21,5 +21,5 @@ def get_safety_score_info(video_path):
 
 if __name__ == "__main__":
     video_path = "resized_video.avi"
-    safety_score_info = get_safety_score_info(video_path)
+    result_image, safety_score_info = get_safety_score_info(video_path)
     print(safety_score_info)
