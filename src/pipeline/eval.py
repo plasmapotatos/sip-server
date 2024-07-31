@@ -120,6 +120,11 @@ def get_frames(video_path, seconds_per_frame):
     
     return frames, frame_times
 
+def extract_text_between_tags(input_string):
+    pattern = r"<output>(.*?)<\/output>"
+    matches = re.findall(pattern, input_string)
+    return matches
+
 if __name__ == '__main__':
     vid_directory = './data/Videos'
     out_file = './src/pipeline/eval_array.json'
@@ -130,6 +135,7 @@ if __name__ == '__main__':
     seconds_per_frame = 1 # for GPT-4o
 
     model = BaselineModel('gpt-4o', seconds_per_frame=seconds_per_frame)
+    mode = "safety"
 
     total_precision = []
     total_recall = []
@@ -147,12 +153,12 @@ if __name__ == '__main__':
     total_false_neg = 0
 
     for i in tqdm(range(1, 11)):
-        k = random_vid_indices(30)
+        k = random_vid_indices(2)
 
         print(k)
         while (True):
             try: 
-                update_evaluation_json_custom(video_directory=vid_directory, output_file=out_file, model=model, vidnums=k)
+                update_evaluation_json_custom(video_directory=vid_directory, output_file=out_file, model=model, vidnums=k, mode=mode, client=client)
                 break
             except Exception as e:
                 print("Error!", e)
@@ -166,21 +172,29 @@ if __name__ == '__main__':
         for r in results:
             if(isinstance(model, VideoLLaVA)):
                 r = r.split('ASSISTANT: ')[1]
-            if(r[:1] == 'Y' or r[:1] == 'N'):
-                predictions.append(r[:1])
-                continue
+            if mode == "safety":
+                processed_result = extract_text_between_tags(r)
+                print("Processed result: ", processed_result)
+                if len(processed_result) > 0:
+                    predictions.append(processed_result[0])
+                    continue
+                else:
+                    print("No output found: ", r)
+                    predictions.append("N")
+                    continue
+            if mode == "default":
+                if(r[:1] == 'Y' or r[:1] == 'N'):
+                    predictions.append(r[:1])
+                    continue
 
-            if "has fallen" in r or "have fallen" in r:
-                predictions.append("Y")
-            elif "Activity of Daily Living" in r or "Activities of Daily Living" in r or "activity of daily living" in r or "activities of daily living" in r or "not fall" in r:
-                predictions.append("N")
-            else:
-                predictions.append("Y")
-
-        predictions = []
-
-        for n in results:
-            predictions.append(n[:1])
+            #hopefully doesn't break it??
+            if model.model_name == 'video-llava':
+                if "has fallen" in r or "have fallen" in r:
+                    predictions.append("Y")
+                elif "Activity of Daily Living" in r or "Activities of Daily Living" in r or "activity of daily living" in r or "activities of daily living" in r or "not fall" in r:
+                    predictions.append("N")
+                else:
+                    predictions.append("Y")
 
         y_true = get_y_true_custom("./data/Annotation_files", k)
         #run the evaluate() function to get a dictionary of metrics
