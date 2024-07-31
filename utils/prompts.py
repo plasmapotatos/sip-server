@@ -4,6 +4,11 @@ BASIC_PROMPT = """You are an agent assigned to monitor the health of a person. Y
 
 FALL_DETECTION_PROMPT = """You are an agent assigned to monitor the health of a person. Your role is to determine if a fall has occurred in the video or if a person in the video appears to be in distress. Reason out your response and enclose your final answer in <output> tags. For example, <output>yes</output> or <output>no</output>"""
 
+FALL_DETECTION_PROMPT_WITH_SAFETY_SCORE = """You are an agent assigned to monitor the health of a person. Your role is to determine if a fall has occurred in the video or if a person in the video appears to be in distress. Reason out your response and enclose your final answer in <output> tags. For example, <output>yes</output> or <output>no</output>
+You are also given the safety scores of some images in the video. The safety score is a number between 1 and 100, where 1 is the least safe and 100 is the safest. 
+{safety_scores}
+"""
+
 ACTION_PLANNING_PROMPT = """You are an agent assigned to monitor the health of a person. A fall has been detected in the video. Your role is to determine a course of action. The actions chosen will be run on the mobile app. Do not exacerbate the situation beyond reasonable circumstance. The available list of actions is as follows: 
 ```python
 call(string phone_number)
@@ -67,6 +72,29 @@ Another example is as follows:
 speak("Sounds good!", 5)
 ```
 The person seems to be okay and has said that they are okay, so we can respond with a positive message to reassure them.
+"""
+
+SAFETY_SCORE_PROMPT = """You are an agent assigned to monitor the health of a person, specifically for fall detection. Your role is to determine the safety score of each of the numbered objects in the image that you believe are important. The safety score is a number between 1 and 100, where 1 is the least safe and 100 is the safest. The safety score should be based on the object's current state and the environment it is in. Please provide your response in the following format:
+
+```json
+{
+    "0": {
+        "object": "table",
+        "safety_score": 80,
+        "reasoning": "The table is sturdy and does not appear to be a hazard."
+    },
+    "1": {
+        "object": "person",
+        "safety_score": 25,
+        "reasoning": "The person appears to be in distress and may have fallen."
+    },
+    "2": {
+        "object": "floor",
+        "safety_score": 90,
+        "reasoning": "The floor is clean and free of obstacles."
+    }
+}
+```
 """
 
 # CONVERSATION_PROMPTa = PromptTemplate(input_variables=["conversation"], template=CONVERSATION_PROMPT_TEMPLATE)
