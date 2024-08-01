@@ -153,7 +153,7 @@ if __name__ == '__main__':
     total_false_neg = 0
 
     for i in tqdm(range(1, 11)):
-        k = random_vid_indices(2)
+        k = random_vid_indices(30)
 
         print(k)
         while (True):
