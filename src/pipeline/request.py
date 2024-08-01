@@ -212,7 +212,6 @@ class VideoLLaVA:
             predictions.append(output)
 
         return predictions
-        
 
 # model = BaselineModel()
 
