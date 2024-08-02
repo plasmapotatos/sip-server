@@ -24,7 +24,6 @@ def fall_detection_simulation():
 
         # Output the first set of actions
         for action in actions:
-            print("\nAction:")
             for key, value in action.items():
                 print(f"{key.capitalize()}: {value}")
             time.sleep(1)
@@ -47,7 +46,6 @@ def fall_detection_simulation():
 
         # Output the second set of actions
         for action in actions:
-            print("\nAction:")
             for key, value in action.items():
                 print(f"{key.capitalize()}: {value}")
             time.sleep(1)
