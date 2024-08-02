@@ -1,0 +1,286 @@
+[
+    {
+        "ID": 1,
+        "Video IDs": [
+            108,
+            106,
+            51
+        ],
+        "Model Output": [
+            "The person in the video has fallen. The reason for this conclusion is that the person is seen sitting on a chair and then suddenly falls to the floor. This indicates that the person was not maintaining balance and control while sitting on the chair, which led to the fall. The fall could be due to various reasons, such as losing balance, slipping, or being distracted by something else in the room.",
+            "The person in the video has fallen. The reason for this conclusion is that the person is seen lying on the floor, which indicates that they have fallen. The video shows the person in various positions, including lying on the floor, sitting on a chair, and standing in front of a table. However, the most significant moment captured in the video is the person falling on the floor.",
+            "The person in the video has fallen. The reason for this conclusion is that the person is lying on the floor, which is not a typical position for someone to be in while sitting on a bench. Additionally, the person is not in a sitting position, which further supports the idea that they have fallen."
+        ],
+        "Model Predictions": [
+            "N(low confidence)(conflict)",
+            "N(conflict)",
+            "N(conflict)"
+        ],
+        "Ground Truth": [
+            "N",
+            "Y",
+            "Y"
+        ],
+        "True Positive Count": 0,
+        "True Negative Count": 0,
+        "False Positive Count": 0,
+        "False Negative Count": 3,
+        "Precision": 0,
+        "Recall": 0.0,
+        "F1 Score": 0
+    },
+    {
+        "ID": 2,
+        "Video IDs": [
+            19,
+            100,
+            83
+        ],
+        "Model Output": [
+            "The person in the video has fallen. The reason for this conclusion is that the person is seen lying on the floor, which indicates that they have fallen. The presence of multiple chairs and a dining table in the room suggests that it is a living room or a similar space, and the person's fall could be due to a loss of balance or an accidental slip.",
+            "The person in the video has fallen. The reason for this conclusion is that the person is seen lying on the floor, which indicates that they have fallen. The video shows the person in various positions, including standing, sitting, and lying on the floor, but the most significant moment is when they fall. The video captures the person's movements and positions, which provide evidence of their fall.",
+            "The person in the video has fallen. The reason for this is that the person is seen lying on the floor, which indicates that they have fallen. The video shows the person in a casual setting, which suggests that they might have been engaged in an activity that led to their fall. It is not possible to determine the exact cause of the fall from the video alone, but it is clear that the person has fallen and is now lying on the floor."
+        ],
+        "Model Predictions": [
+            "N(conflict)",
+            "N(conflict)",
+            "N(conflict)"
+        ],
+        "Ground Truth": [
+            "Y",
+            "Y",
+            "Y"
+        ],
+        "True Positive Count": 0,
+        "True Negative Count": 0,
+        "False Positive Count": 0,
+        "False Negative Count": 3,
+        "Precision": 0,
+        "Recall": 0.0,
+        "F1 Score": 0
+    },
+    {
+        "id": "Failure Cases",
+        "failure_cases": [
+            {
+                "batch_id": 1,
+                "ground_truth": "N",
+                "model_output": "The person in the video has fallen. The reason for this conclusion is that the person is seen sitting on a chair and then suddenly falls to the floor. This indicates that the person was not maintaining balance and control while sitting on the chair, which led to the fall. The fall could be due to various reasons, such as losing balance, slipping, or being distracted by something else in the room.",
+                "model_prediction": "N(low confidence)(conflict)",
+                "false_positive": false,
+                "false_negative": true,
+                "video_number": 108,
+                "video_path": "./data/Videos/video_(108).avi",
+                "frame_numbers": [
+                    0,
+                    24,
+                    48,
+                    72,
+                    96,
+                    120,
+                    144,
+                    168
+                ],
+                "time_of_frames(seconds)": [
+                    0.0,
+                    1.0,
+                    2.0,
+                    3.0,
+                    4.0,
+                    5.0,
+                    6.0,
+                    7.0
+                ],
+                "confidence_score": 0.2,
+                "educated_prediction": "N",
+                "confidence_score_explanation": "Confidence Score: 0.200\n\nJustification: The description states that the person has fallen, but the frames show the individual sitting on a chair and not exhibiting any signs of falling. The person appears to be stable while seated, and there is no visual evidence of a fall occurring in the provided frames. The conclusion drawn in the description does not align with the visual content, leading to a low confidence score.\n\nY/N: N"
+            },
+            {
+                "batch_id": 1,
+                "ground_truth": "Y",
+                "model_output": "The person in the video has fallen. The reason for this conclusion is that the person is seen lying on the floor, which indicates that they have fallen. The video shows the person in various positions, including lying on the floor, sitting on a chair, and standing in front of a table. However, the most significant moment captured in the video is the person falling on the floor.",
+                "model_prediction": "N(conflict)",
+                "false_positive": false,
+                "false_negative": true,
+                "video_number": 106,
+                "video_path": "./data/Videos/video_(106).avi",
+                "frame_numbers": [
+                    0,
+                    24,
+                    48,
+                    72,
+                    96,
+                    120,
+                    144,
+                    168
+                ],
+                "time_of_frames(seconds)": [
+                    0.0,
+                    1.0,
+                    2.0,
+                    3.0,
+                    4.0,
+                    5.0,
+                    6.0,
+                    7.0
+                ],
+                "confidence_score": 0.9,
+                "educated_prediction": "Y",
+                "confidence_score_explanation": "Confidence Score: 0.900\n\nJustification: The description states that the person has fallen, which is supported by the frames showing the individual lying on the floor in the last two images. The earlier frames depict the person standing and moving, but the critical moment of falling is captured in the transition to the last two frames, where the person is clearly on the ground. The description accurately reflects the key event of the person falling, although it could have been more explicit about the sequence leading to the fall. Overall, the description aligns well with the visual evidence.\n\nY"
+            },
+            {
+                "batch_id": 1,
+                "ground_truth": "Y",
+                "model_output": "The person in the video has fallen. The reason for this conclusion is that the person is lying on the floor, which is not a typical position for someone to be in while sitting on a bench. Additionally, the person is not in a sitting position, which further supports the idea that they have fallen.",
+                "model_prediction": "N(conflict)",
+                "false_positive": false,
+                "false_negative": true,
+                "video_number": 51,
+                "video_path": "./data/Videos/video_(51).avi",
+                "frame_numbers": [
+                    0,
+                    25,
+                    50,
+                    75,
+                    100,
+                    125,
+                    150,
+                    175,
+                    200
+                ],
+                "time_of_frames(seconds)": [
+                    0.0,
+                    1.0,
+                    2.0,
+                    3.0,
+                    4.0,
+                    5.0,
+                    6.0,
+                    7.0,
+                    8.0
+                ],
+                "confidence_score": 0.9,
+                "educated_prediction": "Y",
+                "confidence_score_explanation": "Confidence Score: 0.900\n\nJustification: The description states that the person has fallen, which is supported by the frames showing the individual lying on the floor. The progression of the frames indicates that the person was initially standing and then appears to have lost balance or control, leading to their position on the floor. The description accurately captures the key elements observed in the frames, particularly the transition from a standing position to lying on the floor, which is consistent with the conclusion that the person has fallen.\n\nY"
+            },
+            {
+                "batch_id": 2,
+                "ground_truth": "Y",
+                "model_output": "The person in the video has fallen. The reason for this conclusion is that the person is seen lying on the floor, which indicates that they have fallen. The presence of multiple chairs and a dining table in the room suggests that it is a living room or a similar space, and the person's fall could be due to a loss of balance or an accidental slip.",
+                "model_prediction": "N(conflict)",
+                "false_positive": false,
+                "false_negative": true,
+                "video_number": 19,
+                "video_path": "./data/Videos/video_(19).avi",
+                "frame_numbers": [
+                    0,
+                    25,
+                    50,
+                    75,
+                    100,
+                    125,
+                    150,
+                    175,
+                    200
+                ],
+                "time_of_frames(seconds)": [
+                    0.0,
+                    1.0,
+                    2.0,
+                    3.0,
+                    4.0,
+                    5.0,
+                    6.0,
+                    7.0,
+                    8.0
+                ],
+                "confidence_score": 0.9,
+                "educated_prediction": "Y",
+                "confidence_score_explanation": "Confidence Score: 0.900\n\nJustification: The description states that the person has fallen, which is supported by the frames showing the individual transitioning from a standing position to lying on the floor. The frames depict the person appearing to lose balance and subsequently ending up on the ground, which aligns with the conclusion that they have fallen. The mention of multiple chairs and a dining table in the description is consistent with the setting shown in the frames. However, the description could be slightly more detailed regarding the specific actions leading to the fall, hence the score of 0.900 instead of a perfect score.\n\nY"
+            },
+            {
+                "batch_id": 2,
+                "ground_truth": "Y",
+                "model_output": "The person in the video has fallen. The reason for this conclusion is that the person is seen lying on the floor, which indicates that they have fallen. The video shows the person in various positions, including standing, sitting, and lying on the floor, but the most significant moment is when they fall. The video captures the person's movements and positions, which provide evidence of their fall.",
+                "model_prediction": "N(conflict)",
+                "false_positive": false,
+                "false_negative": true,
+                "video_number": 100,
+                "video_path": "./data/Videos/video_(100).avi",
+                "frame_numbers": [
+                    0,
+                    24,
+                    48,
+                    72,
+                    96,
+                    120,
+                    144,
+                    168
+                ],
+                "time_of_frames(seconds)": [
+                    0.0,
+                    1.0,
+                    2.0,
+                    3.0,
+                    4.0,
+                    5.0,
+                    6.0,
+                    7.0
+                ],
+                "confidence_score": 0.9,
+                "educated_prediction": "Y",
+                "confidence_score_explanation": "Confidence Score: 0.900\n\nJustification: The description accurately states that the person has fallen, as the frames show a progression of movements leading to the individual lying on the floor. The initial frames depict the person sitting and then moving around the table, followed by a clear moment where they are seen on the floor, which supports the conclusion that they have fallen. The description captures the essence of the video, focusing on the significant moment of the fall and the person's various positions. However, the description could be slightly more detailed regarding the transition into the fall, which is why I did not give a perfect score.\n\nY"
+            },
+            {
+                "batch_id": 2,
+                "ground_truth": "Y",
+                "model_output": "The person in the video has fallen. The reason for this is that the person is seen lying on the floor, which indicates that they have fallen. The video shows the person in a casual setting, which suggests that they might have been engaged in an activity that led to their fall. It is not possible to determine the exact cause of the fall from the video alone, but it is clear that the person has fallen and is now lying on the floor.",
+                "model_prediction": "N(conflict)",
+                "false_positive": false,
+                "false_negative": true,
+                "video_number": 83,
+                "video_path": "./data/Videos/video_(83).avi",
+                "frame_numbers": [
+                    0,
+                    24,
+                    48,
+                    72,
+                    96,
+                    120,
+                    144,
+                    168,
+                    192,
+                    216
+                ],
+                "time_of_frames(seconds)": [
+                    0.0,
+                    1.0,
+                    2.0,
+                    3.0,
+                    4.0,
+                    5.0,
+                    6.0,
+                    7.0,
+                    8.0,
+                    9.0
+                ],
+                "confidence_score": 0.9,
+                "educated_prediction": "Y",
+                "confidence_score_explanation": "Confidence Score: 0.900\n\nJustification: The description accurately states that the person is lying on the floor, which is clearly depicted in the later frames of the video. The progression of the frames shows the individual descending the stairs and then falling onto a mat, which supports the assertion that they have fallen. The context of a casual setting and the presence of a mat suggests that the person may have been engaged in an activity that led to the fall. While the exact cause of the fall is not explicitly shown, the visual evidence strongly indicates that the person has indeed fallen.\n\nY"
+            }
+        ]
+    },
+    {
+        "id": "Final Evaluation",
+        "Total True Positive": 0,
+        "Total True Negative": 0,
+        "Total False Positive": 0,
+        "Total False Negative": 6,
+        "Precision (Mean)": 0,
+        "Precision (Standard Deviation)": 0.0,
+        "Recall (Mean)": 0.0,
+        "Recall (Standard Deviation)": 0.0,
+        "F1 Score (Mean)": 0,
+        "F1 Score (Standard Deviation)": 0.0
+    }
+]
