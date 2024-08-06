@@ -6,7 +6,7 @@ import requests
 import base64
 from gradio_client import Client, handle_file
 from utils.safety_scores import get_safety_score_info
-from utils.prompts import FALL_DETECTION_PROMPT_WITH_SAFETY_SCORE
+from utils.prompts import FALL_DETECTION_PROMPT_WITH_SAFETY_SCORE_GPT, FALL_DETECTION_PROMPT_WITH_SAFETY_SCORE_VLLAVA
 
 class BaselineModel:
     def __init__(self, model_name='gpt-4o-mini', seconds_per_frame=1):
@@ -92,7 +92,7 @@ class BaselineModel:
     
     def get_safety_score_response(self, vid_path, segmented_image, safety_score_info):
         base64Frames, audio_path = BaselineModel.process_video(self, video_path=vid_path)
-        prompt = FALL_DETECTION_PROMPT_WITH_SAFETY_SCORE.format(safety_score_info=safety_score_info)
+        prompt = FALL_DETECTION_PROMPT_WITH_SAFETY_SCORE_GPT.format(safety_score_info=safety_score_info)
 
         _, buffer = cv2.imencode(".jpg", segmented_image)
         base64Image = base64.b64encode(buffer).decode("utf-8")
@@ -199,11 +199,11 @@ class VideoLLaVA:
         except requests.exceptions.RequestException as e:
             print("Error:", e)
 
-    def get_safety_score_response(self, video_path, segmented_image, safety_score_info):
+    def get_safety_score_response(self, video_path, client=None):
         if not client:
             print("need to make client :(")
             client = Client("http://127.0.0.1:7860")
-        prompt = "USER: <video>" + FALL_DETECTION_PROMPT_WITH_SAFETY_SCORE.format(safety_score_info=safety_score_info) + " ASSISTANT:"
+        prompt = "USER: <video>" + FALL_DETECTION_PROMPT_WITH_SAFETY_SCORE_VLLAVA.format(safety_score_info=None) + " ASSISTANT:"
         try:
             output = client.predict(
                 prompt=prompt,
@@ -234,15 +234,13 @@ class VideoLLaVA:
 
         return predictions
         
-    def predict_custom_safety(self, directory, vidnums):
+    def predict_custom_safety(self, directory, vidnums, client=None):
         video_paths = load_vids(directory)
         predictions = []
 
         for n in vidnums:
             video_path = video_paths[n - 1]
-            result_image, safety_score_info = get_safety_score_info(video_path)
-            cv2.imwrite('result_image_from_video.jpg', result_image)
-            output = self.get_safety_score_response(vid_path=video_paths[n - 1], segmented_image=result_image, safety_score_info=safety_score_info)
+            output = self.get_safety_score_response(video_path=video_paths[n - 1], client=client)
             predictions.append(output)
 
         return predictions

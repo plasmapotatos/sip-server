@@ -4,9 +4,15 @@ BASIC_PROMPT = """You are an agent assigned to monitor the health of a person. Y
 
 FALL_DETECTION_PROMPT = """You are an agent assigned to monitor the health of a person. Your role is to determine if a fall has occurred in the video or if a person in the video appears to be in distress. Reason out your response and enclose your final answer in <output> tags. For example, <output>Y</output> or <output>N</output>"""
 
-FALL_DETECTION_PROMPT_WITH_SAFETY_SCORE = """You are an agent assigned to monitor the health of a person. Your role is to determine if a fall has occurred in the video or if a person in the video appears to be in distress. Reason out your response and enclose your final answer in <output> tags. For example, <output>Y</output> or <output>N</output>
+FALL_DETECTION_PROMPT_WITH_SAFETY_SCORE_GPT = """You are an agent assigned to monitor the health of a person. Your role is to determine if a fall has occurred in the video or if a person in the video appears to be in distress. Reason out your response and enclose your final answer in <output> tags. For example, <output>Y</output> or <output>N</output>
 You are also given the safety scores of some images in the video. The safety score is a number between 1 and 100, where 1 is the least safe and 100 is the safest. You should consider these safety scores when determining if a fall has occurred. The safety scores are as follows:
 {safety_score_info}
+"""
+
+FALL_DETECTION_PROMPT_WITH_SAFETY_SCORE_VLLAVA = """You are an agent assigned to monitor the health of a person. Your role is to determine if a fall has occurred in the video, if a person in the video appears to be in distress or if they are just performing an Activity of Daily Life.
+You are also given the safety scores of some images in the video. The safety score is a number between 1 and 100, where 1 is the least safe and 100 is the safest. You should consider these safety scores when determining if a fall has occurred. The safety scores are as follows:
+{safety_score_info}
+The person in the video is either performing an Activity of Daily Life or falls in the video. Determine whether or not the person in the chronological series of images, which were extracted from a video, has fallen. Explain why you think the person has or has not fallen.
 """
 
 ACTION_PLANNING_PROMPT = """You are an agent assigned to monitor the health of a person. A fall has been detected in the video. Your role is to determine a course of action. The actions chosen will be run on the mobile app. Do not exacerbate the situation beyond reasonable circumstance. The available list of actions is as follows: 

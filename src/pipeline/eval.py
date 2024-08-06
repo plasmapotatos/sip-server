@@ -147,6 +147,15 @@ def extract_text_between_tags(input_string):
     matches = re.findall(pattern, input_string)
     return matches
 
+def get_pred_conf(output):
+    try:
+        for i in range(len(output) - 1, -1, -1):
+            if(output[i:i + 1] == "Y" or output[i:i + 1] == "N"):
+                return output[i:i + 1]
+    except:
+        return "ERROR"
+    return "No output found"
+
 if __name__ == '__main__':
     vid_directory = './data/Videos'
     out_file = './src/pipeline/eval_array.json'
@@ -156,13 +165,13 @@ if __name__ == '__main__':
 
     seconds_per_frame = 1 # for GPT-4o
 
-    model = VideoLLaVA()
+    model = BaselineModel()
     mode = "safety"
 
     total_precision = []
     total_recall = []
     total_f1 = []
-    client = Client("http://127.0.0.1:7860")
+    # client = Client("http://127.0.0.1:7860")
 
     failure_cases = []
     conf_results = []
@@ -180,7 +189,10 @@ if __name__ == '__main__':
         print(k)
         while (True):
             try: 
-                update_evaluation_json_custom(video_directory=vid_directory, output_file=out_file, model=model, vidnums=k, mode=mode, client=client)
+                # if(isinstance(model, VideoLLaVA)):
+                #     update_evaluation_json_custom(video_directory=vid_directory, output_file=out_file, model=model, vidnums=k, mode=mode, client=client)
+                if(isinstance(model, BaselineModel)):
+                    update_evaluation_json_custom(video_directory=vid_directory, output_file=out_file, model=model, vidnums=k, mode=mode)
                 break
             except Exception as e:
                 print("Error!", e)
@@ -200,22 +212,22 @@ if __name__ == '__main__':
         predictions = []
         for r in results:
             if mode == "safety":
-                # processed_result = extract_text_between_tags(r)
-                # print("Processed result: ", processed_result)
-                # if len(processed_result) > 0:
-                #     predictions.append(processed_result[0])
-                #     continue
-                # else:
-                #     print("No output found: ", r)
-                #     predictions.append("N")
-                #     continue
-
-                if "has fallen" in r or "have fallen" in r:
-                    predictions.append("Y")
-                elif "Activity of Daily Living" in r or "Activities of Daily Living" in r or "activity of daily living" in r or "activities of daily living" in r or "not fall" in r:
-                    predictions.append("N")
+                processed_result = extract_text_between_tags(r)
+                print("Processed result: ", processed_result)
+                if len(processed_result) > 0:
+                    predictions.append(processed_result[0])
+                    continue
                 else:
-                    predictions.append("Y")
+                    print("No output found: ", r)
+                    predictions.append("N")
+                    continue
+
+                # if "has fallen" in r or "have fallen" in r:
+                #     predictions.append("Y")
+                # elif "Activity of Daily Living" in r or "Activities of Daily Living" in r or "activity of daily living" in r or "activities of daily living" in r or "not fall" in r:
+                #     predictions.append("N")
+                # else:
+                #     predictions.append("Y")
             if mode == "default":
                 if(r[:1] == 'Y' or r[:1] == 'N'):
                     predictions.append(r[:1])
@@ -237,23 +249,22 @@ if __name__ == '__main__':
             ans = ''
             while (True):
                 try: 
-                    if(isinstance(model, BaselineModel)):
-                        ans = BaselineModel().eval_consistency(video_path, frames, results[j][3:])
-                    else:
-                        ans = BaselineModel().eval_consistency(video_path, frames, results[j])
+                    ans = BaselineModel().eval_consistency(video_path, frames, results[j])
                     break
                 except Exception as e:
                     print("Error!", e)
                     continue
 
             conf = float(re.search("[01][.][0-9]+", ans).group())
+            edu_pred = get_pred_conf(ans)
             conf_dict = {
                 "batch_id": i,
                 "ground_truth": y_true[j],
                 "model_output": results[j],
                 "model_prediction": predictions[j],
                 "confidence_score": conf,
-                "confidence_score_explanation": ans
+                "confidence_score_explanation": ans,
+                "educated_prediction": edu_pred
             }
 
             conf_list.append(conf)
@@ -289,7 +300,7 @@ if __name__ == '__main__':
                 "frame_numbers": frames,
                 "time_of_frames(seconds)": frametimes,
                 "confidence_score": conf,
-                "educated_prediction": ans[-1:],
+                "educated_prediction": edu_pred,
                 "confidence_score_explanation": ans
             }
 

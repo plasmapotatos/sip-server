@@ -163,17 +163,34 @@ def prompt_sam(image_str):
         'annotation_mode': ['Mark', 'Polygon'],
         'mask_alpha': 0.05
     }
-    response = requests.post(url, json=data)
-    response_data = response.json()
 
-    result_image_str = response_data['result_image']
-    result_image_data = base64.b64decode(result_image_str)
-    
-    # Convert base64 to image
-    nparr = np.frombuffer(result_image_data, np.uint8)
-    result_image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    try:
+        response = requests.post(url, json=data)
+        response_data = response.json()
 
-    return result_image
+        try:
+            response_data = response.json()
+        except ValueError:
+            print(f"Error: Response is not in JSON format. Response text: {response.text}")
+            return None
+        
+        if 'result_image' not in response_data:
+            print("Error: 'result_image' key not found in the response.")
+            return None
+
+        result_image_str = response_data['result_image']
+        result_image_data = base64.b64decode(result_image_str)
+        
+        # Convert base64 to image
+        nparr = np.frombuffer(result_image_data, np.uint8)
+        result_image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        return result_image
+
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed: {e}")
+        return None
+
 
 if __name__ == "__main__":
     image_path = 'room.png'
