@@ -245,6 +245,7 @@ class VideoLLaVA:
 
         return predictions
 
+
 # model = BaselineModel()
 
 # ans = model.eval_consistency("./data/Videos/video_(4).avi", [0, 25, 50, 75, 100, 125, 150, 175, 200], "The person has not fallen. They appear to have intentionally laid down on the mattress placed on the floor. The sequence of movements suggests a deliberate action rather than an accidental fall.")
