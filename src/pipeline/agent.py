@@ -15,11 +15,12 @@ def run_validation_custom(vid_directory, model, vidnums, client=None, mode="defa
             print("Safety mode")
             results = model.predict_custom_safety(directory=vid_directory, vidnums=vidnums)
     elif(isinstance(model, VideoLLaVA)):
+        #if incorporating safety scores, add switch here
         if mode == "default":
-            results = model.predict_custom(directory=vid_directory, vidnums=vidnums)
+            results = model.predict_custom(directory=vid_directory, vidnums=vidnums, client=client)
         if mode == "safety":
             print("Safety mode")
-            results = model.predict_custom_safety(directory=vid_directory, vidnums=vidnums)
+            results = model.predict_custom_safety(directory=vid_directory, vidnums=vidnums, client=client)
     return results
 
 

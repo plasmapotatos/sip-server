@@ -1,16 +1,20 @@
 import io
 import av
 import numpy as np
+import cv2
+import base64
 
 import gradio as gr
 import torch
 from PIL import Image
 from transformers import VideoLlavaProcessor, VideoLlavaForConditionalGeneration
+from utils.safety_scores import get_safety_score_info
+from utils.prompts import FALL_DETECTION_PROMPT_WITH_SAFETY_SCORE_VLLAVA
 
 # Load the pre-trained model and tokenizer
 device = "cuda:0"
 
-model = VideoLlavaForConditionalGeneration.from_pretrained("LanguageBind/Video-LLaVA-7B-hf").to(device)
+model = VideoLlavaForConditionalGeneration.from_pretrained("LanguageBind/Video-LLaVA-7B-hf", device_map="auto")
 processor = VideoLlavaProcessor.from_pretrained("LanguageBind/Video-LLaVA-7B-hf")
 
 def read_video_pyav(container, indices):
@@ -25,6 +29,38 @@ def read_video_pyav(container, indices):
             frames.append(frame)
     return np.stack([x.to_ndarray(format="rgb24") for x in frames])
 
+# # Define the inference function
+# def prompt_videollava(prompt, video_path):
+#     # Preprocess the image
+#     print(video_path)
+#     container = av.open(video_path)
+
+#     # sample uniformly 8 frames from the video
+#     total_frames = container.streams.video[0].frames
+#     indices = np.arange(0, total_frames, container.streams.video[0].average_rate).astype(int)
+#     clip = read_video_pyav(container, indices)
+
+#     result_image, safety_score_info = get_safety_score_info(video_path)
+#     cv2.imwrite('result_image_from_video.jpg', result_image)
+
+#     _, buffer = cv2.imencode(".jpg", result_image)
+#     base64Image = base64.b64encode(buffer).decode("utf-8")
+
+#     img_data = base64.b64decode(base64Image)
+#     img = Image.open(io.BytesIO(img_data)).convert("RGB")
+#     img = np.array(img)
+#     img = np.expand_dims(img, axis=0)  # Add batch dimension
+
+#     # Combine the video frames and the additional image
+#     combined_clip = np.concatenate((img, clip), axis=0)
+
+#     inputs = processor(text=prompt, videos=combined_clip, return_tensors="pt").to(device)
+
+#     # Generate
+#     generate_ids = model.generate(**inputs, max_length=1000)
+#     return processor.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
+
+
 # Define the inference function
 def prompt_videollava(prompt, video_path):
     # Preprocess the image
@@ -33,13 +69,29 @@ def prompt_videollava(prompt, video_path):
 
     # sample uniformly 8 frames from the video
     total_frames = container.streams.video[0].frames
-    indices = np.arange(0, total_frames, total_frames / 8).astype(int)
+    indices = np.arange(0, total_frames, container.streams.video[0].average_rate).astype(int)
     clip = read_video_pyav(container, indices)
 
-    inputs = processor(text=prompt, videos=clip, return_tensors="pt").to(device)
+    result_image, safety_score_info = get_safety_score_info(video_path)
+
+    #Note: prompt that is passed in is disregarded
+    prompt = "USER: <video>" + FALL_DETECTION_PROMPT_WITH_SAFETY_SCORE_VLLAVA.format(safety_score_info=safety_score_info) + " ASSISTANT:"
+
+    # Resize result_image to match the frame size
+    frame_height, frame_width, _ = clip[0].shape
+    result_image = cv2.resize(result_image, (frame_width, frame_height))
+
+    # Convert result_image to numpy array in the required format
+    result_image = np.array(result_image)
+    result_image = np.expand_dims(result_image, axis=0)  # Add batch dimension
+
+    # Combine the video frames and the additional image
+    combined_clip = np.concatenate((result_image, clip), axis=0)
+
+    inputs = processor(text=prompt, videos=combined_clip, return_tensors="pt")
 
     # Generate
-    generate_ids = model.generate(**inputs, max_length=300)
+    generate_ids = model.generate(**inputs, max_length=3000)
     return processor.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
 
 
